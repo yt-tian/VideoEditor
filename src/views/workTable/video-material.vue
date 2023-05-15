@@ -39,7 +39,7 @@
         <div class="all-industry">
             <ul class="industry-wrap">
                 <li>
-                    <img src="../../assets/images/file-img.png" alt="">
+                    <img src="@/assets/images/file-img.png" alt="">
                     <div>金融行业</div>
                 </li>
             </ul>
