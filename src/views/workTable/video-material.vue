@@ -78,7 +78,7 @@
             <el-upload class="upload-demo" 
                 drag 
                 :headers="uploadHeaders"
-                action="/api/v1/import_media_byfile"
+                action="api/v1/import_media_byfile"
                 :data="uploadData"
                 :on-change="fileListHander" multiple>
                 <el-icon class="el-icon--upload uploadMp4"></el-icon>
