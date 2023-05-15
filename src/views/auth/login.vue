@@ -50,7 +50,7 @@ export default {
           // })
           if (res.data.code == 200) {
             console.log(200)
-            this.$router.push('./video')
+            this.$router.push('/home/video')
             this.$message({
               message: '登录成功！',
               type: 'success'

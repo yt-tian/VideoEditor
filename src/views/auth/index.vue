@@ -51,13 +51,15 @@ export default {
     height: calc(100% - 84px);
 
     .form-box {
-      width: 400px;
+      width: 380px;
       height: 450px;
       margin-right: 12%;
       padding: 20px;
+      box-sizing: border-box;
       h2 {
         color: #fff;
         font-size: 36px;
+        margin-bottom: 20px;
         text-align: center;
       }
     }

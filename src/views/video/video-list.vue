@@ -4,7 +4,7 @@
       <ul class="wrap" ref="wrap">
         <li id="crawlBar" v-for="(item, index) in list" :key="index">
           <video class="video" controls muted>
-            <source :src="`${appBaseUrl}/${item.Path}`" />
+            <source :src="`${appBaseUrl}${item.Path}`" />
             <!-- <source :src="item.Path" /> -->
             <!-- <source src="../../assets/video/video1.mp4" /> -->
           </video>
@@ -77,6 +77,7 @@ export default {
     materialHander(e) {
       this.MediaID = [e.ID];
       this.dialogFormVisible = true;
+      console.log("this.dialogFormVisible:",this.dialogFormVisible);
     },
     // 修改是否让页面显示与隐藏的事件
 	 updateVisible (val) {
@@ -96,7 +97,7 @@ export default {
           message: '导入成功！',
           type: 'success'
         });
-        this.$router.push('./workTable')
+        this.$router.push('/workTable')
       }).catch(err=>{
         console.log("导入素材库报错：",err);
       })

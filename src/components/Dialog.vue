@@ -1,24 +1,24 @@
 <template>
     <div class="dialog">
-        <el-dialog :title="title" :visible.sync="dialogFormVisible"
-            :width="popupWidth" top="20%">
+        <el-dialog :title="title" v-model="dialogFormVisible" :width="popupWidth" top="20%">
             <el-form :model="form">
                 <el-form-item label="行业分组" :label-width="formLabelWidth">
                 </el-form-item>
                 <el-select v-model="form.region" placeholder="农业和食品行业">
-                    <el-option :label="item.Industry" v-for="(item, index) in form.type" :value="item.ID"  :key="index"></el-option>
+                    <el-option :label="item.Industry" v-for="(item, index) in form.type" :value="item.ID"
+                        :key="index"></el-option>
                 </el-select>
             </el-form>
-            <div slot="footer" class="dialog-footer">
+            <div vlot:="footer" class="dialog-footer">
                 <el-button @click="() => Cancel()">取 消</el-button>
-                <el-button type="primary" @click="() => Save()">确 定</el-button>
+                <el-button type="primary" @click="() => Save()">确 认</el-button>
             </div>
         </el-dialog>
-
     </div>
 </template>
 <script>
-import {getIndustryLsit} from '../api/index'
+import { getIndustryLsit } from '../api/index'
+
 export default {
     props: {
         title: {
@@ -39,7 +39,7 @@ export default {
             form: {
                 name: '',
                 region: '',
-                type:[],
+                type: [],
             },
             formLabelWidth: '120px'
         }
@@ -59,11 +59,11 @@ export default {
         }
     },
     mounted() {
-         getIndustryLsit().then(res=>{
-            const list  =JSON.stringify(res.data.data);
+        getIndustryLsit().then(res => {
+            const list = JSON.stringify(res.data.data);
             this.form.type = JSON.parse(list);
-            console.log("getIndustryLsit:",this.form.type);
-            
+            console.log("getIndustryLsit:", this.form.type);
+
         })
     },
     methods: {
@@ -73,7 +73,7 @@ export default {
         },
         Save() {
             // console.log("行业",this.form.region);
-            this.$emit('submitPopupData',this.form.region)
+            this.$emit('submitPopupData', this.form.region)
         },
         handleClose() {
             this.form.region = '';
@@ -83,16 +83,16 @@ export default {
 }
 </script>
 <style scoped lang="less">
-/deep/.dialog>.el-form-item__label {
-    text-align: left !important;
+:deep(.el-form-item__label) {
+    justify-content: start !important;
 }
 
-/deep/.el-dialog__title {
+:deep(.el-dialog__title) {
     font-weight: bold;
     font-family: PingFang SC;
 }
 
-/deep/.el-form-item {
+:deep(.el-form-item) {
     margin-bottom: 0 !important;
 
     .el-form-item__label {
@@ -101,7 +101,7 @@ export default {
     }
 }
 
-/deep/.el-dialog {
+:deep(.el-dialog) {
     width: 360px !important;
     border-radius: 10px !important;
 
@@ -111,11 +111,11 @@ export default {
 
 }
 
-/deep/.el-dialog>.el-dialog__body {
+:deep(.el-dialog>.el-dialog__body) {
     padding: 0 20px;
 }
 
-/deep/.el-button--primary {
+:deep(.el-button--primary) {
     background-color: #2254f4;
     border-radius: 124px;
     padding: 14px 24px;
@@ -123,30 +123,39 @@ export default {
     height: 44px;
 }
 
-/deep/.el-dialog__footer {
+:deep(.dialog-footer) {
+    display: flex;
+    justify-content: right;
     padding: 15px 20px 15px;
     font-size: 16px;
     font-weight: bold;
 
-    span {
-        font-size: 14px;
-        font-weight: bold;
-    }
-
-    .el-button--default {
+    .el-button {
         border: none;
+        color: #151515;
+        height: 44px;
 
         >span {
-            color: #151515;
+            font-size: 14px;
+            font-weight: 700;
 
+        }
+    }
+
+    :deep(.el-select .el-input__wrapper) {
+        padding: 6px 11px;
+    }
+
+    .el-button--primary {
+        >span {
+            color: #fff;
         }
 
     }
 }
 
-/deep/ .el-dialog__headerbtn .el-dialog__close {
+:deep(.el-dialog__headerbtn .el-dialog__close) {
     color: #fff;
     background-color: #5a5a5a;
     border-radius: 50%;
-}
-</style>
+}</style>

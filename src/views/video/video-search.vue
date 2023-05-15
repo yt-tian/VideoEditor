@@ -111,7 +111,7 @@ export default {
   justify-content: space-around;
   }
   .getChannelCheckout .el-checkbox{
-    margin-right: 12px;
+    margin-right: 10px;
     margin-bottom:10px ;
   }
 .getChannel {

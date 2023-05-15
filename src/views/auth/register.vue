@@ -30,8 +30,8 @@
 </template>
 <script>
 import { register } from '@/api/auth'
-import { isPhoneNum } from '@/utils/validation';
-import { ElMessage } from 'element-plus';
+// import { isPhoneNum } from '@/utils/validation';
+// import { ElMessage } from 'element-plus';
 export default {
   data() {
     return {
@@ -41,18 +41,18 @@ export default {
     }
   },
   methods: {
-    checkPhoneNum() {
-      console.log('val:',e.target.value)
-      const state = isPhoneNum(this.telPhone)
-      if (!state) {
-        return ElMessage.error('手机号码不合法!')
-      }
-      return true;
-    },
+    // checkPhoneNum() {
+    //   // console.log('val:',e.target.value)
+    //   const state = isPhoneNum(this.telPhone)
+    //   if (!state) {
+    //     return ElMessage.error('手机号码不合法!')
+    //   }
+    //   return true;
+    // },
     registerHandler() {
-      if (this.checkPhoneNum())
+      // if (this.checkPhoneNum())
       register(this.telPhone, this.passWord).then((res) => {
-        this.$router.push('./login')
+        this.$router.push('/auth/login')
         console.log('注册：', res)
         if (res.code == 200) {
           this.$message({

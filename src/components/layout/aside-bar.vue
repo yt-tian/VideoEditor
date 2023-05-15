@@ -7,7 +7,7 @@
       :class="item.isActive ? 'active' : ''"
       @click="tabClick(i)"
     >
-      <img class="icon" :src="require(`@/assets/images/${item.icon}.png`)" alt="">
+      <img class="icon" :src="getAssetsImgs(`${item.icon}.png`)" alt="">
       <div class="txt">{{ item.txt }}</div>
     </div>
     <!-- <div class="tabs-item">
@@ -17,11 +17,11 @@
   </div>
 </template>
 <script>
-import { require } from '@/utils/require'
+import { getAssetsImgs } from '@/utils'
 export default {
   data() {
     return {
-      require,
+      getAssetsImgs,
       tabList: [
         { icon: 'video', txt: '视频', path: '/home/video', isActive: true },
         { icon: 'text', txt: '文案', path: '/home/official', isActive: false }

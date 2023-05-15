@@ -21,13 +21,23 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        chunkFileNames: "static/js/[name]-[hash].js",
+        entryFileNames: "static/js/[name]-[hash].js",
+        assetFileNames: "static/[ext]/[name]-[hash].[ext]",
+      },
+    },
+  },
   server: {
     host: '0.0.0.0',
     proxy: {
       '/api': {
         target: 'http://119.23.230.233/',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     }
   }

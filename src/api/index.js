@@ -49,14 +49,24 @@ export const getIndustryLsit = ()=> request({
   url: '/get_industry',
 })
 
-// 导入素材库接口
+// 上传爬取素材库接口
 export const importMedia = (MediaID, MediaType, industryId)=> request({
   method: 'post',
   url: '/import_media_byid',
-  //写死参数测试下
   data:{
     MediaID,
     MediaType,
     industryId
+  }
+})
+
+// 上传本地文件素材库接口
+export const importMediaFile = (MediaType, industryId, file)=> request({
+  method: 'put',
+  url: '/import_media_byfile',
+  data:{
+    MediaType,
+    industryId,
+    file
   }
 })
