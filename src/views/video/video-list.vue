@@ -75,9 +75,8 @@ export default {
       }
     },
     materialHander(e) {
-      this.MediaID = [e.ID];
+      this.MediaID = [e._id];
       this.dialogFormVisible = true;
-      console.log("this.dialogFormVisible:",this.dialogFormVisible);
     },
     // 修改是否让页面显示与隐藏的事件
 	 updateVisible (val) {
