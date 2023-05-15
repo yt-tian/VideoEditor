@@ -74,7 +74,12 @@
         </div>
 
         <el-dialog v-model="dialogVisible" title="导入素材" width="30%" :before-close="handleCloseFile">
-            <el-upload class="upload-demo" drag action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+            <!-- action="/api/v1/import_media_byfile" -->
+            <el-upload class="upload-demo" 
+                drag 
+                :headers="uploadHeaders"
+                action="/api/v1/import_media_byfile"
+                :data="uploadData"
                 :on-change="fileListHander" multiple>
                 <el-icon class="el-icon--upload uploadMp4"></el-icon>
                 <div class="el-upload__text">
@@ -123,6 +128,13 @@ export default {
             MediaType: 'MediaType',
             file: '@/assets/video/video1.mp4',
             isEmpty: false,
+            uploadData: {
+                MediaType: '',
+                IndustryId : ''
+            },
+            uploadHeaders: {
+                toke: sessionStorage.getItem('Authorization')
+            }
         }
     },
     computed: {

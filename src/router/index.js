@@ -63,9 +63,10 @@ const router = createRouter({
       path: '/workTable',
       name: 'workTable',
       component: workTable,
+      redirect: '/workTable/material',
       children: [
         {
-          path: '/material',
+          path: 'material',
           name: 'material',
           component: material,
         },
