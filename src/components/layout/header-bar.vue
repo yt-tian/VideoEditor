@@ -19,7 +19,7 @@
     },
     methods: {
       register(){
-        this.$router.push('./auth')
+        this.$router.push('/auth/login')
       }
     }
   }

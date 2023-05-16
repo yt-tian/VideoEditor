@@ -51,7 +51,7 @@ export default {
       console.log(key, keyPath);
     },
     materialChange() {
-      this.$router.push('/material')
+      this.$router.push('/workTable/material')
     },
     videoChange(){
       this.$router.push('/home/video')

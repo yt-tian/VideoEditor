@@ -5,7 +5,7 @@
                 <el-form-item label="行业分组" :label-width="formLabelWidth">
                 </el-form-item>
                 <el-select v-model="form.region" placeholder="农业和食品行业">
-                    <el-option :label="item.Industry" v-for="(item, index) in form.type" :value="item.ID"
+                    <el-option :label="item.industry" v-for="(item, index) in form.type" :value="item.id"
                         :key="index"></el-option>
                 </el-select>
             </el-form>

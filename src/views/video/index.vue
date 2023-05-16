@@ -12,7 +12,7 @@
         <emptyVideo v-if="!isLoading"/>
         <div class="loading-img" v-if="isLoading">
           <!-- <img  src="../../assets/images/loading.gif" alt=""> -->
-          <div><i class="el-icon-loading"></i></div>
+          <div><el-icon><Loading /></el-icon></div>
           Loading...
           <Loading/>
         </div>

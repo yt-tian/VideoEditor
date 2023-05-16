@@ -42,18 +42,17 @@ export default {
           console.log('登录：', res.data)
           const token = res.data.data.token
           sessionStorage.setItem('Authorization', token)
-          // router.beforeEach((to, from, next) => {
-          //     if (to.path === '/registerPage') return next()
-          //     const tokenStr = window.sessionStorage.getItem('Token')
-          //     if (!tokenStr) return next('/registerPage')
-          //     next()
-          // })
           if (res.data.code == 200) {
-            console.log(200)
             this.$router.push('/home/video')
             this.$message({
               message: '登录成功！',
               type: 'success'
+            })
+          }
+          if(res.data.code == 403) {
+            this.$message({
+              message: '登录失败，请先注册用户',
+              type: 'error'
             })
           }
         })

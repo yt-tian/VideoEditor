@@ -5,10 +5,10 @@
                 <i class="file-img"></i> <span>全部行业</span>
             </div>
             <div class="all-file-right">
-                <div class="upload">
+                <div class="upload" @click="() => uploadFild()">
                     <div>
                         <span class="file-load"></span>
-                        <span class="add-file" @click="() => uploadFild()">上传素材库</span>
+                        <span class="add-file">上传素材库</span>
                     </div>
                 </div>
                 <!-- <div class="upload">
@@ -20,7 +20,7 @@
         </div>
         <div class="subfolder">
             <div>
-                <div>行业分类 <span>({{ number }})</span> <el-icon>
+                <div>行业分类 <span style="color: #999;">({{ mediaList.length}})</span> <el-icon>
                         <CaretRight class="careRight" color="#999" />
                     </el-icon> </div>
             </div>
@@ -29,7 +29,7 @@
                         <ArrowDown color="#999" class="arrow-down" />
                     </el-icon></div>
                 <div>创建时间 </div>
-                <div> <el-switch size="small" v-model="value1" />显示子文件夹内容 </div>
+                <div> <el-switch size="small" v-model="value1" />显示行业分类内容 </div>
                 <div>排列方式 <el-icon>
                         <Menu class="menu" />
                     </el-icon></div>
@@ -38,49 +38,71 @@
 
         <div class="all-industry">
             <ul class="industry-wrap">
-                <li>
+                <li v-for="(item, index) in mediaList " :key="index">
                     <img src="@/assets/images/file-img.png" alt="">
-                    <div>金融行业</div>
+                    <div>{{ item.IndustryName }}</div>
                 </li>
             </ul>
-            <div style="position: relative;"> 内容({{ number }})<el-icon>
+            <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{ mediaList.length}})</span>
+                <el-icon>
                     <CaretRight class="careRight" color="#999" />
-                </el-icon></div>
+                </el-icon>
+            </div>
 
-            <div style="height:calc(100% - 120px)">
+            <div style="height:100%">
                 <ul class="get-content">
-                    <li>
-                        <div>新建视频 2022-23-55</div>
+                    <li v-for="(item, index) in mediaList " :key="index">
+                        <video class="video" controls muted>
+                            <source :src="`${appBaseUrl}${item.Path}`" />
+                        </video>
+                        <div>新建视频{{ item.Created }}</div>
+                        <div class="mask-item">
+                            <div>
+                                <el-checkbox v-model="checked1" label="" size="large" class="checkbox" />
+                                <span class="mixed-shear">混剪</span>
+                            </div>
+                            <div class="edit-wrap">
+                                <button class="edit">编辑</button>
+                                <div class="more-edit"><span class="more"></span>
+                                    <ul class="more-list">
+                                        <li>重命名</li>
+                                        <li>创建副本</li>
+                                        <li>复制到...</li>
+                                        <li>移动到...</li>
+                                        <li>下载</li>
+                                        <li @click="() => deleteMediaChange(item.Id)">移入回收站</li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </div>
                     </li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
                 </ul>
             </div>
 
         </div>
-
+        <!--  v-if="mediaList.length == 0" -->
         <div class="empty-file" v-if="isEmpty">
             <div><img src="@/assets/images/empty-floder.png" alt=""></div>
             <div>上传你的第一个文件吧</div>
-            <div class="upload">
+            <div class="upload" @click="() => uploadFild()">
                 <div>
                     <span class="file-load"></span>
-                    <span class="add-file" @click="() => uploadFild()">上传素材库</span>
+                    <span class="add-file">上传素材库</span>
                 </div>
             </div>
         </div>
 
         <el-dialog v-model="dialogVisible" title="导入素材" width="30%" :before-close="handleCloseFile">
             <!-- action="/api/v1/import_media_byfile" -->
-            <el-upload class="upload-demo" 
+            <!-- :on-change="fileListHander" -->
+            <el-upload 
+                class="upload-demo" 
                 drag 
                 :headers="uploadHeaders"
-                action="api/v1/import_media_byfile"
-                :data="uploadData"
-                :on-change="fileListHander" multiple>
+                :http-request="upLoadRequest"
+                :on-change="fileListHander"
+                multiple>
                 <el-icon class="el-icon--upload uploadMp4"></el-icon>
                 <div class="el-upload__text">
                     拖拽文件到此处，或者 <br /><em style="color:#2254F4;">选择文件...</em>
@@ -113,13 +135,17 @@
 </template>
 <script>
 import DialogView from '../../components/Dialog.vue'
-import { importMediaFile } from '../../api/index'
+import { importMediaFile, getMediaList, deleteMedia } from '../../api/index'
+const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
+import axios from 'axios'
+
 export default {
     components: {
         DialogView
     },
     data() {
         return {
+            appBaseUrl,
             number: 0,
             value1: true,
             dialogVisible: false,
@@ -129,21 +155,55 @@ export default {
             file: '@/assets/video/video1.mp4',
             isEmpty: false,
             uploadData: {
-                MediaType: '',
-                IndustryId : ''
+                MediaType: 'video',
+                IndustryId: '1000'
             },
             uploadHeaders: {
-                toke: sessionStorage.getItem('Authorization')
-            }
+                toke: sessionStorage.getItem('Authorization'),
+                'Accept': 'application/json'
+            },
+            mediaList: [],
+            dataTime: '',
+            deletelist:[],
         }
     },
     computed: {
-
+        uploadUrl() {
+            return `/api/v1/import_media_byfile?MediaType=${this.uploadData.MediaType}&IndustryId=${this.uploadData.IndustryId}`
+        }
     },
     mounted() {
+        getMediaList().then(res => {
+            // console.log("获取素材库视频", res.data.data);
+            // const dataTime = res.data.data
+            this.mediaList = res.data.data;
+            if (this.mediaList == '{}') {
+                this.mediaList = null;
+                this.isEmpty = true;
+            }
 
+        })
     },
     methods: {
+        upLoadRequest(option) {
+            const formData = new FormData()
+            console.log(option.filename);
+            formData.append(`file`, option.file)
+            console.log(formData)
+            axios({
+                url: this.uploadUrl,
+                method: 'put',
+                data: formData,
+                headers: {
+                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VyIjp7IlVzZXJJZCI6IjY0NjJlNjYyZWYwMjMyZTZkZmFkMzFkNiJ9LCJleHAiOjE2ODQyNDYzMjEsImlzcyI6Imh1bWFuIn0.YNtiLE_c5zpvgldpEqbyHp5OTHl1UDeHAuPSjqxKvCo',
+                  "Content-Type": "multipart/form-data",
+                }
+            }).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log(err);
+            })
+        },
         uploadFild() {
             this.dialogVisible = true;
         },
@@ -186,12 +246,45 @@ export default {
             this.dialogFormVisible = false
         },
         fileListHander() {
-            this.visibleFile = true
-            this.dialogVisible = false
+            // this.visibleFile = true
+            this.dialogVisible = false;
+            this.$nextTick(()=>{
+                 getMediaList().then(res => {
+            // console.log("获取素材库视频", res.data.data);
+            // const dataTime = res.data.data
+            this.mediaList = res.data.data;
+            if (this.mediaList == '{}') {
+                this.mediaList = null;
+                this.isEmpty = true;
+            }
+
+        })
+            })
+           
         },
         importFileHander() {
             this.visibleFile = false
             this.dialogFormVisible = true;
+        },
+        deleteMediaChange(item) {
+            this.deletelist[0] = item;
+            console.log(  this.deletelist);  
+            // console.log(this.deletelist);
+            deleteMedia(this.deletelist).then(res => {
+                if (res.data.code == 200)
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    });
+                getMediaList().then(res => {
+                    this.mediaList = res.data.data;
+                    if (this.mediaList == '{}') {
+                        this.mediaList = null;
+                    }
+
+                })
+
+            })
         }
     },
 }
@@ -288,6 +381,8 @@ export default {
     .subfolder {
         position: relative;
         margin: 14px;
+        margin-bottom: 0;
+        font-size: 14px;
         vertical-align: middle;
 
         .sub-right {
@@ -369,10 +464,13 @@ export default {
     flex-direction: column;
 
     .industry-wrap {
+        display: flex;
         margin-bottom: 18px;
 
         >li {
             width: 80px;
+            margin: 0 22px;
+            cursor: pointer;
 
             >div {
                 font-family: PingFangSCMedium-Medium;
@@ -380,22 +478,26 @@ export default {
                 font-weight: normal;
                 text-align: center;
                 margin-top: 10px;
+                color: #999;
             }
+
         }
 
     }
 
     .get-content {
         display: flex;
-        height: 400px;
+        height: 700px;
         width: 100%;
         flex-wrap: wrap;
         overflow-y: scroll;
 
         >li {
             display: flex;
-            align-items: end;
-            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+            // justify-content: center;
             width: 220px;
             height: 312px;
             border-radius: 10px;
@@ -403,10 +505,127 @@ export default {
             opacity: 1;
             background: #F8F9F9;
             border: 1px solid #EBEBEB;
-            >div{
 
+            .video {
+                width: 100%;
+                height: 90%;
             }
+
+            div {
+                padding: 6px 0;
+                text-align: center;
+                font-size: 12px;
+            }
+
         }
     }
-}</style>
+
+    .get-content>li:hover .mask-item {
+        display: block;
+        padding: 10px 0;
+        box-sizing: border-box;
+    }
+
+    .mask-item {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        display: none;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
+
+        .edit-wrap {
+
+            margin-top: 90%;
+            padding: 0 10px;
+        }
+
+        >div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+
+        }
+
+    }
+
+    .mixed-shear {
+        display: inline-block;
+        width: 40px;
+        padding: 6px;
+        height: 16px;
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+        background-color: #2254f4;
+        color: #fff;
+        float: right;
+        font-size: 12px;
+        text-align: center;
+    }
+
+}
+
+.more-edit {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 36px;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #fff;
+
+    >.more-list {
+        position: absolute;
+        top: -264px;
+        right: -164px;
+        width: 200px;
+        height: 264px;
+        border-radius: 10px;
+        display: none;
+        box-shadow: 0 0 8px 0 #ccc;
+        background-color: #fff;
+        z-index: 99;
+        >li{
+            margin: 2px 10px;
+            padding: 14px 10px;
+            font-size: 14px;
+            color: #3D3D3D;
+            box-sizing: border-box;
+            border-radius: 5px;
+            text-align: left;
+        }
+        >li:hover{
+            background-color: #eeeeee;
+        }
+    }
+}
+
+.more-edit:hover>.more-list {
+    display: block;
+}
+
+.edit {
+    width: 126px;
+    height: 36px;
+    border: none;
+    border-radius: 5px;
+    align-items: end;
+}
+
+.more {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: url(../../assets/images/more.png) center center no-repeat;
+}
+
+:deep(.el-checkbox.el-checkbox--large .el-checkbox__inner) {
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+}
+</style>
   

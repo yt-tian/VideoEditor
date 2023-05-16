@@ -70,3 +70,20 @@ export const importMediaFile = (MediaType, industryId, file)=> request({
     file
   }
 })
+
+// 获取素材库视频接口
+export const getMediaList = ()=> request({
+  method: 'get',
+  url: '/get_media',
+
+})
+
+// 获取素材库视频接口
+export const deleteMedia = (MediaID)=> request({
+  method: 'post',
+  url: '/delete_media',
+  data:{
+    MediaID
+  }
+
+})
