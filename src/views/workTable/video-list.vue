@@ -43,14 +43,14 @@
           <button>30日</button>
         </div>
       </div>
-      <ul class="wrap" ref="wrap" @scroll="orderScroll($event)" >
-        <li id="crawlBar" v-for="(item, index) in list" :key="index">
+      <ul class="wrap" id="VideoWrap" ref="VideoWrap" @scroll="orderScroll($event)" >
+        <li v-for="(item, index) in list" :key="index">
           <video class="video" controls muted>
             <source :src="`${appBaseUrl}${item.Path}`" />
           </video>
           <!-- <button class="importMaterial" @click="materialHander(item, index)">导入素材库</button> -->
         </li>
-        <li class="seat" v-for="(item, i) of 10" :key="i"> </li>
+        <!-- <li class="seat" v-for="(item, i) of 10" :key="i"> </li> -->
       </ul>
     </div>
     <DialogView 
@@ -70,7 +70,10 @@
 import DialogView from '../../components/Dialog.vue'
 import {importMedia} from '../../api/index'
 import {getVideos} from "@/api/index";
+import WaterFall from '@/utils/WaterFall'
+
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
+
 export default {
   props: {
     // list: {
@@ -91,13 +94,131 @@ export default {
         checkBoxList: ['抖音', '快手', '小红书', '今日头条'],
         MediaType :'video',
         keyword:'',
-        list:[],
+        list:[
+        // {
+        //     "Created":"2023-05-17T22:11:09.949+08:00",
+        //     "Duration":0,
+        //     "FileName":"89Eq9HEDWCIZOHejjCV1bxzrk3yJLglj.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/89Eq9HEDWCIZOHejjCV1bxzrk3yJLglj.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"太多人看新车了，我只能努力往里凑！ #抖音车王争霸赛    @抖音汽车",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e07ddd8dc552879598ec",
+        //     "updated":"2023-05-17T22:11:09.949+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:27.162+08:00",
+        //     "Duration":0,
+        //     "FileName":"54CbeLmxaVWZFhv548oSqP8EarEoRo3J.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/54CbeLmxaVWZFhv548oSqP8EarEoRo3J.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"看我虚晃一招 #2020广州国际车展  #2020抖音汽车影响力创作者 @抖音汽车",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e08fdd8dc552879598ed",
+        //     "updated":"2023-05-17T22:11:27.162+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:30.627+08:00",
+        //     "Duration":0,
+        //     "FileName":"owoEa4EvZdR9Lya3M3CdQq4AEjziyqRf.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/owoEa4EvZdR9Lya3M3CdQq4AEjziyqRf.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"顺便美个甲 #2021上海国际车展 #评车打卡挑战#我的花样车生活 @抖音汽车  #首发新车攻略",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e092dd8dc552879598ee",
+        //     "updated":"2023-05-17T22:11:30.627+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:32.002+08:00",
+        //     "Duration":0,
+        //     "FileName":"l81vU8cQgwkYfmWL0lnJxNkAM9rU1GjX.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/l81vU8cQgwkYfmWL0lnJxNkAM9rU1GjX.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"为女性设计的汽车应该是什么样的？遇鉴欧拉闪电猫\u0026朋克猫设计美学 @欧拉ORA   @抖音汽车",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e094dd8dc552879598ef",
+        //     "updated":"2023-05-17T22:11:32.002+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:33.764+08:00",
+        //     "Duration":0,
+        //     "FileName":"256nBmGipKucoizMQWVVqqNYrw4ddR1Z.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/256nBmGipKucoizMQWVVqqNYrw4ddR1Z.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"今年村口的车展你准备好了吗？#风行t5evo#型色先锋潮出不一样 #2020抖音汽车影响力创作者@抖音汽车",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e095dd8dc552879598f0",
+        //     "updated":"2023-05-17T22:11:33.764+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:37.717+08:00",
+        //     "Duration":0,
+        //     "FileName":"pbg1N4vwfCqSiS21tR6vf9cfUEiHCeIn.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/pbg1N4vwfCqSiS21tR6vf9cfUEiHCeIn.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"车后排还能干嘛？#星巢计划 #汽车人共创计划 #星巢玩车人 ",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e099dd8dc552879598f1",
+        //     "updated":"2023-05-17T22:11:37.717+08:00"
+        // },
+        // {
+        //     "Created":"2023-05-17T22:11:38.084+08:00",
+        //     "Duration":0,
+        //     "FileName":"O9s1Y3tMCHEsesqgxyX6Mr4hj1EQAv6U.mp4",
+        //     "Heigth":0,
+        //     "Keyword":"汽车",
+        //     "Path":"reptile_video/douyin/汽车/O9s1Y3tMCHEsesqgxyX6Mr4hj1EQAv6U.mp4",
+        //     "Size":0,
+        //     "Status":0,
+        //     "Title":"BMW i7 M70 终于发布了！中国是BMW 7系 全球第一市场，BMW真的在未来要全面纯电化了吗？ BMW汽车设计与数字化结合的引领者，时代在变迁 科技在发展 未来已来，电影里的即将实现！#宝马 #bmw #全新bmw7系 #宝马中国 #BMWi7M70",
+        //     "VideoType":"抖音",
+        //     "Width":0,
+        //     "_id":"6464e09add8dc552879598f2",
+        //     "updated":"2023-05-17T22:11:38.084+08:00"
+        // }
+    ],
         checked1:'11'
     };
   },
   computed: {},
   mounted() {
+    window.addEventListener('resize', () => {
+      new WaterFall({
+        dom: document.getElementById('VideoWrap'),
+        gap: 20,
+      });
+    })
     console.log('import.meta.env的内容',import.meta.env)
+    setTimeout(() => {
+      new WaterFall({
+        dom: document.getElementById('VideoWrap'),
+        gap: 20,
+      });
+    }, 1000)
   },
   methods: {
     moreChange() {
@@ -108,15 +229,15 @@ export default {
     orderScroll() {
       var scrollTop = this.$refs.videListRef.scrollTop;
       const videListHeight = this.$refs.videListRef.getBoundingClientRect().height;
-      const videListWrap = this.$refs.wrap.getBoundingClientRect().height;
+      const videListWrap = this.$refs.VideoWrap.getBoundingClientRect().height;
       console.log("scrollTop:",scrollTop);
-      console.log("ul height:", this.$refs.wrap.getBoundingClientRect().height);
+      console.log("ul height:", this.$refs.VideoWrap.getBoundingClientRect().height);
       if (videListWrap - (scrollTop + videListHeight) < 1) {
         // this.crawlBarFixed = true;
-        getVideos([this.checkBoxList[0]],this.keyword,20).then(res=>{
-          console.log(res);
-          this.list.push(...res.data.data);
-        })
+        // getVideos([this.checkBoxList[0]],this.keyword,20).then(res=>{
+        //   console.log(res);
+        //   this.list.push(...res.data.data);
+        // })
       } else {
         this.crawlBarFixed = false;
       }
@@ -202,8 +323,8 @@ export default {
 
 .container {
   height: 100%;
-   display: flex; 
-   width: 100%;
+  display: flex; 
+  width: 100%;
   flex-wrap: wrap;
   flex-direction: column; 
   justify-content: space-around;
@@ -278,7 +399,7 @@ export default {
         li{
           color: #3D3D3D;
           font-size: 14px;
-          margin: 20px 0;
+          margin: 8px 0;
           >.all{
             display:inline-block;
             padding: 5px 10px;
@@ -291,10 +412,12 @@ export default {
             width: 80px;
           }
           >span{
-            padding: 0 14px;
+            padding: 10px 14px;
+            cursor: pointer;
             >i{
               position: relative;
               top: 4px;
+              margin-right: 4px;
               display: inline-block;
               width: 20px;
               height: 20px;
@@ -318,7 +441,7 @@ export default {
     .search{
       height: 34px;
       width: 282px;
-      margin: 24px 12px;
+      margin: 10px 12px;
       border-radius: 4px;
       box-sizing: border-box;
       border: 1px solid #999;
@@ -338,30 +461,34 @@ export default {
     }
 
     .wrap {
-      display: flex;
-      flex-wrap: wrap;
-      /* border: 1px solid pink; */
-      justify-content: center;
+      // display: flex;
+      // flex-wrap: wrap;
+      // /* border: 1px solid pink; */
+      // justify-content: center;
       width: 100%;
-      height: 500px;
+      height: calc(100% - 300px);
       overflow-y: scroll;
       // gap: 16px;
       padding-bottom: var(--reduction-height);
+      position: relative;
       >li {
+        
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        position: relative;
+        position: absolute;
+        left: 0;
+        right: 0;
         width: 240px;
-        margin: 8px;
+        // margin: 8px;
         // height: 320px;
         // margin-bottom: 30px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         background: url(../../assets/images/transpant.png);
         .video {
           width: 240px;
-          height: 320px;
+          // height: 320px;
         }
       }
       .seat{
