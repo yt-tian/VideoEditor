@@ -27,6 +27,10 @@
           <el-icon><setting /></el-icon>
           <span>AI文案</span>
         </el-menu-item>
+        <el-menu-item index="5" @click="()=>getVideo()">
+          <el-icon><VideoPlay /></el-icon>
+          <span>视频爬取</span>
+        </el-menu-item>
       </el-menu>
   </div>
 </template>
@@ -55,6 +59,9 @@ export default {
     },
     videoChange(){
       this.$router.push('/home/video')
+    },
+    getVideo(){
+      this.$router.push('/workTable/videoList')
     }
   },
 }

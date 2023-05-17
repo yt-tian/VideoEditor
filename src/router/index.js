@@ -7,6 +7,7 @@ import officialView from '@/views/official/index.vue';
 import authView from '@/views/auth/index.vue';
 import workTable from '@/views/workTable/index.vue';
 import material from '@/views/workTable/video-material.vue';
+import videoList from '@/views/workTable/video-list.vue';
 import loginView from '@/views/auth/login.vue';
 import notFindView from '@/views/404.vue'
 
@@ -70,6 +71,11 @@ const router = createRouter({
           name: 'material',
           component: material,
         },
+        {
+          path:'videoList',
+          name:'videoList',
+          component:videoList
+        }
       ]
     },
     {

@@ -1,7 +1,7 @@
 <template>
     <div class="workTable">
       <div class="header-wrap">
-        <Header></Header>
+        <Headers></Headers>
       </div>
       <div class="content">
         <div class="left">
@@ -14,18 +14,16 @@
     </div>
   </template>
   <script>  
-import Header from './header.vue';
+import Headers from './header.vue';
 import AsideWork from './word-aside.vue';
   export default {
-    components:{
-    },
     data() {
       return {
   
       }
     },
     components:{
-        Header,
+        Headers,
         AsideWork
     },
     computed:{

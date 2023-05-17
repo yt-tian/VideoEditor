@@ -20,7 +20,7 @@
         </div>
         <div class="subfolder">
             <div>
-                <div>行业分类 <span style="color: #999;">({{ mediaList.length}})</span> <el-icon>
+                <div>行业分类 <span style="color: #999;">({{ num}})</span> <el-icon>
                         <CaretRight class="careRight" color="#999" />
                     </el-icon> </div>
             </div>
@@ -43,7 +43,7 @@
                     <div>{{ item.IndustryName }}</div>
                 </li>
             </ul>
-            <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{ mediaList.length}})</span>
+            <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{num}})</span>
                 <el-icon>
                     <CaretRight class="careRight" color="#999" />
                 </el-icon>
@@ -58,7 +58,7 @@
                         <div>新建视频{{ item.Created }}</div>
                         <div class="mask-item">
                             <div>
-                                <el-checkbox v-model="checked1" label="" size="large" class="checkbox" />
+                                <el-checkbox v-model="isCheck" checked label="" size="large" class="checkbox" />
                                 <span class="mixed-shear">混剪</span>
                             </div>
                             <div class="edit-wrap">
@@ -73,15 +73,12 @@
                                         <li @click="() => deleteMediaChange(item.Id)">移入回收站</li>
                                     </ul>
                                 </div>
-
                             </div>
                         </div>
                     </li>
                 </ul>
             </div>
-
         </div>
-        <!--  v-if="mediaList.length == 0" -->
         <div class="empty-file" v-if="isEmpty">
             <div><img src="@/assets/images/empty-floder.png" alt=""></div>
             <div>上传你的第一个文件吧</div>
@@ -92,7 +89,20 @@
                 </div>
             </div>
         </div>
-
+        <div class="check-all" v-if="isCheck">
+            <div class="check-left">
+                <el-checkbox v-model="checked1" label="全选" />
+                <span style="font-size: 14px;color: #999;">已选择 {{ 0 }}</span> <span class="line"></span>
+                <button class="button">创建副本</button>
+                <button class="button">移动到...</button>
+                <button class="button">复制到...</button>
+                <button class="button">下载</button>
+                <button class="button">移入回收站</button>
+            </div>
+            <div class="check-right">
+                <el-icon><CloseBold /></el-icon>
+            </div>
+        </div>
         <el-dialog v-model="dialogVisible" title="导入素材" width="30%" :before-close="handleCloseFile">
             <!-- action="/api/v1/import_media_byfile" -->
             <!-- :on-change="fileListHander" -->
@@ -159,12 +169,15 @@ export default {
                 IndustryId: '1000'
             },
             uploadHeaders: {
-                toke: sessionStorage.getItem('Authorization'),
-                'Accept': 'application/json'
+                token: sessionStorage.getItem('Authorization'),
+                "Content-Type": "multipart/form-data",
             },
             mediaList: [],
             dataTime: '',
             deletelist:[],
+            isCheck:false,
+            checkVideoValue:false,
+            num:null,
         }
     },
     computed: {
@@ -174,11 +187,12 @@ export default {
     },
     mounted() {
         getMediaList().then(res => {
-            // console.log("获取素材库视频", res.data.data);
+            console.log("获取素材库视频", res.data.data);
             // const dataTime = res.data.data
             this.mediaList = res.data.data;
             if (this.mediaList == '{}') {
                 this.mediaList = null;
+                this.num = 0
                 this.isEmpty = true;
             }
 
@@ -194,12 +208,19 @@ export default {
                 url: this.uploadUrl,
                 method: 'put',
                 data: formData,
-                headers: {
-                token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VyIjp7IlVzZXJJZCI6IjY0NjJlNjYyZWYwMjMyZTZkZmFkMzFkNiJ9LCJleHAiOjE2ODQyNDYzMjEsImlzcyI6Imh1bWFuIn0.YNtiLE_c5zpvgldpEqbyHp5OTHl1UDeHAuPSjqxKvCo',
-                  "Content-Type": "multipart/form-data",
-                }
+                headers: this.uploadHeaders
             }).then(res => {
                 console.log(res);
+                getMediaList().then(res => {
+            // console.log("获取素材库视频", res.data.data);
+            // const dataTime = res.data.data
+            this.mediaList = res.data.data;
+            if (this.mediaList == '{}') {
+                this.mediaList = null;
+                this.isEmpty = true;
+            }
+
+        })
             }).catch(err => {
                 console.log(err);
             })
@@ -285,6 +306,9 @@ export default {
                 })
 
             })
+        },
+        checkChange(){
+            this.isCheck = true
         }
     },
 }
@@ -487,7 +511,7 @@ export default {
 
     .get-content {
         display: flex;
-        height: 700px;
+        height: 520px;
         width: 100%;
         flex-wrap: wrap;
         overflow-y: scroll;
@@ -555,8 +579,8 @@ export default {
     .mixed-shear {
         display: inline-block;
         width: 40px;
-        padding: 6px;
-        height: 16px;
+        padding: 3px;
+        height: 14px;
         border-top-left-radius: 20px;
         border-bottom-left-radius: 20px;
         background-color: #2254f4;
@@ -623,9 +647,50 @@ export default {
 }
 
 :deep(.el-checkbox.el-checkbox--large .el-checkbox__inner) {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 18px;
     margin-left: 10px;
+}
+
+.material-page >.check-all{
+    position: fixed;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
+    width: 90%;
+    box-sizing: border-box;
+    height: 80px;
+    background-color: #fff;
+    box-shadow: 0px -3px 5px 0px rgba(0, 0, 0, 0.2);
+    .check-right{
+        padding-right: 70px;
+        cursor: pointer;
+    }
+    
+    >.check-left{
+        width: 40%;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        >.line{
+        display: inline-block;
+        width: 1px;
+        height: 20px;
+        background-color: #d8d8d8;
+    }
+    >.button{
+            display: inline-block;
+            padding: 8px 15px;
+            height: 32px;
+            border: 1px solid #999;
+            background:none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    }
+
 }
 </style>
   
