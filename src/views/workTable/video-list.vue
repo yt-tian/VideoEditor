@@ -367,7 +367,7 @@ export default {
           if (this.list.length > 1) {
             this.list = [];
           }
-          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [item.title], this.keyword, this.list.length);
+          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [item.title], this.keyword, this.num);
 
         }
       });
@@ -379,7 +379,7 @@ export default {
         if (this.list.length > 1) {
             this.list = [];
           }
-        this.getVideoList(this.IsHighVideo, i, this.SortType, [this.mediaClassification[1].title], this.keyword, this.list.length);
+        this.getVideoList(this.IsHighVideo, i, this.SortType, [this.mediaClassification[1].title], this.keyword, this.num);
       })
     },
     tabDurationClick(i) {
@@ -397,7 +397,7 @@ export default {
         if (this.list.length > 1) {
             this.list = [];
           }
-        this.getVideoList(this.IsHighVideo,this.SizeType,this.SortType,[this.mediaClassification[1].title], this.keyword, this.list.length);
+        this.getVideoList(this.IsHighVideo,this.SizeType,this.SortType,[this.mediaClassification[1].title], this.keyword, this.num);
       })
     }
   }
