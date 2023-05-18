@@ -43,9 +43,10 @@
       </div>
       <ul class="wrap" id="VideoWrap" ref="VideoWrap" @scroll="orderScroll($event)" v-if="!Isloading">
         <li  v-for="(item, index) in list" :key="index" >
-          <video class="video" controls muted>
+          <!-- <video class="video" controls muted>
             <source :src="`${appBaseUrl}${item.Path}`" />
-          </video>
+          </video> -->
+          <img :src="item.ImgUrl" />
           <div class="title-content">
             <p>{{ item.Title }}</p>
             <p>@{{ item.NickName }}</p>
@@ -81,7 +82,7 @@ import { getVideos } from "@/api/index";
 import WaterFall from '@/utils/WaterFall'
 import { sleep } from '@/utils/index'
 import { ElMessage } from 'element-plus';
-import { getAssetsImgs } from '@/utils'
+import { getAssetsImgs, getVideoFirstFrame } from '@/utils'
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 export default {
@@ -239,17 +240,11 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    list: {
-      handler() {
-        console.log('list*************: ', this.list)
-        this.$nextTick(this.videoLayout.bind(this))
-      },
-      immediate: true
-    }
-  },
   mounted() {
     window.addEventListener('resize', this.videoLayout.bind(this))
+    // getVideoFirstFrame('https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', 300, 200).then(res => {
+    //   console.log(res);
+    // });
   },
   methods: {
     videoLayout() {
@@ -319,7 +314,6 @@ export default {
       }
       const res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, sindex).catch(() => {
       });
-      console.log("res:", res);
       if(res.data.data !== '{}'){
         this.Isloading = false;
         // this.list.push(...res.data.data);
@@ -334,7 +328,21 @@ export default {
       // console.log("爬取数据", list);
       
       if (Array.isArray(res.data.data) && res.data.data.length) {
-        this.list.push(...res.data.data);
+        const originList = res.data.data;
+        for(let i = 0; i < Math.min(20, originList.length); i++) {
+          try {
+            const { Path, Width, Heigth } = originList[i];
+            console.log(Path, Width, Heigth);
+            const ImgUrl = await getVideoFirstFrame('/' + Path, Width, Heigth);
+            originList[i].ImgUrl = ImgUrl;
+          } catch(err) {
+            console.log('getVideoFirstFrame: ' + err);
+            originList[i].ImgUrl = '';
+          }
+          this.list.push(originList[i]);
+          this.$nextTick(this.videoLayout.bind(this));
+        }
+        console.log(originList);  
       } else {
         if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
           ElMessage.info('没有该资源了哦!');
@@ -344,15 +352,12 @@ export default {
         await sleep(5000);
       }
       this.$nextTick(this.videoLayout.bind(this));
-      setTimeout(() => {
-        this.videoLayout.bind(this)
-      }, 2000)
       await sleep(1000);
-      console.log(this.list);
-      if (this.list.length < 20) {  
-        console.log("this.list.length:",this.list.length);
-        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title, this.mediaClassification[2].title], this.keyword, this.list.length);
-      } 
+      // console.log(this.list);
+      // if (this.list.length < 20) {  
+      //   console.log("this.list.length:",this.list.length);
+      //   this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title, this.mediaClassification[2].title], this.keyword, this.list.length);
+      // } 
     },
      searchVideo() {
       if (this.list.length > 1) {
@@ -630,6 +635,9 @@ export default {
         left: 0;
         right: 0;
         width: 240px;
+        img{
+          width: 100%;
+        }
         
         // margin: 8px;
         // height: 320px;

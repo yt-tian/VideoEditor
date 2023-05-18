@@ -33,6 +33,9 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
+    headers: {
+      'Access-Control-Allow-Origin': 'http://119.23.230.233/'
+    },
     proxy: {
       '/api': {
         // target: 'http://127.0.0.1:3000',
@@ -40,6 +43,10 @@ export default defineConfig({
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/reptile_video': {
+        target: 'http://119.23.230.233/',
+        changeOrigin: true,
+      }
     }
   }
 })
