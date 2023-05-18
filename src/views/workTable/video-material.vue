@@ -38,9 +38,9 @@
 
         <div class="all-industry">
             <ul class="industry-wrap">
-                <li v-for="(item, index) in mediaList " :key="index">
+                <li v-for="(item, index) in fileList " :key="index" @click="fileDirClick(item)">
                     <img src="@/assets/images/file-img.png" alt="">
-                    <div>{{ item.IndustryName }}</div>
+                    <div>{{ item.key }}</div>
                 </li>
             </ul>
             <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{num}})</span>
@@ -178,6 +178,7 @@ export default {
             isCheck:false,
             checkVideoValue:false,
             num:null,
+            fileList: []
         }
     },
     computed: {
@@ -186,10 +187,21 @@ export default {
         }
     },
     mounted() {
+       
         getMediaList().then(res => {
             console.log("获取素材库视频", res.data.data);
             // const dataTime = res.data.data
-            this.mediaList = res.data.data;
+            const obj = res.data.data.MVideos;
+            const arr = []
+            for (const key in obj) {
+                arr.push({
+                    key: key,
+                    list: obj[key]
+                })
+                this.mediaList.push(...obj[key])
+            }
+            this.fileList = arr
+            
             if (this.mediaList == '{}') {
                 this.mediaList = null;
                 this.num = 0
@@ -199,6 +211,14 @@ export default {
         })
     },
     methods: {
+        fileDirClick(item) {
+            console.log(JSON.parse(JSON.stringify(item.list)));
+            this.mediaList = [];
+            this.$nextTick(() => {
+                this.mediaList = JSON.parse(JSON.stringify(item.list))
+            })
+            
+        },
         upLoadRequest(option) {
             const formData = new FormData()
             console.log(option.filename);
@@ -273,7 +293,7 @@ export default {
                  getMediaList().then(res => {
             // console.log("获取素材库视频", res.data.data);
             // const dataTime = res.data.data
-            this.mediaList = res.data.data;
+            this.mediaList = res.data.data.MVideos;
             if (this.mediaList == '{}') {
                 this.mediaList = null;
                 this.isEmpty = true;

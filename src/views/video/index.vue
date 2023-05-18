@@ -89,7 +89,10 @@ export default {
       pageSize: 20,
       pageNum: 1,
       moreRequest: false, // 点击爬取更多的时候， 防止暴力点击
-      isLoading:false
+      isLoading:false,
+      IsHighVideo:true,
+      SizeType:0,
+      SortType:1
     };
   },
   computed: {},
@@ -125,17 +128,17 @@ export default {
       console.log("climbMore");
       if (!this.moreRequest) {
         this.pageNum++;
-        this.getVideoList([this.checkVal], this.keyword, this.list.length);
+        this.getVideoList(this.IsHighVideo,this.SizeType,this.SortType,[this.checkVal], this.keyword, this.list.length);
         this.moreRequest = true;
       }
     },
-    async getVideoList(checkList, keyword, sindex = 0) {
+    async getVideoList(IsHighVideo,SizeType,SortType,checkList, keyword, sindex = 0) {
       // 校验时间上是否超过5分钟, 超过五分钟结束调用
       if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
         ElMessage.info('请求超时!');
         return;
       }
-      const res = await getVideos(checkList, keyword, sindex).catch(() => {
+      const res = await getVideos(IsHighVideo,SizeType,SortType,checkList, keyword, sindex).catch(() => {
         this.moreRequest = false;
       });
       console.log("res:",res);

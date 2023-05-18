@@ -1,10 +1,22 @@
 import request from '../utils/request'
 
 // 获取视频接口
-export const getVideos = (VideoType,keyword, sindex = 0, num = 20,) => request({
+/*
+IsHighVideo: true 表示高清视频，720P以上
+SizeType: 0:默认，1：横版，2：竖板
+SortType: 1：点赞数排序 2：时间
+VideoType:渠道类型
+keyword：关键字
+num：一次数量
+sindex：从第几条开始爬取
+*/
+export const getVideos = (IsHighVideo,SizeType,SortType,VideoType,keyword, sindex = 0, num = 20,) => request({
   method: 'post',
   url: '/get_videos',
   data: {
+    IsHighVideo,
+    SizeType,
+    SortType,
     VideoType,
     keyword,
     num,

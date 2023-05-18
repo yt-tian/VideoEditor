@@ -6,15 +6,17 @@ export default class WaterFall {
     this.gap = options.gap;
     // console.log(this.containerDom)
     this.itemsDom = this.containerDom.getElementsByTagName('li');
-    this.itemDomWidth = this.itemsDom[0].offsetWidth;
-    const containerWidth = this.containerDom.offsetWidth
-    // console.log(containerWidth, this.itemDomWidth)
-    this.column = Math.floor(containerWidth / (this.itemDomWidth + this.gap));
+    if (this.itemsDom && this.itemsDom.length) {
+      this.itemDomWidth = this.itemsDom[0].offsetWidth;
+      const containerWidth = this.containerDom.offsetWidth
+      // console.log(containerWidth, this.itemDomWidth)
+      this.column = Math.floor(containerWidth / (this.itemDomWidth + this.gap));
 
-    this.baseLeft = (containerWidth - (this.column * this.itemDomWidth ) - this.gap * (this.column - 1)) / 2
+      this.baseLeft = (containerWidth - (this.column * this.itemDomWidth ) - this.gap * (this.column - 1)) / 2
 
-    // console.log('this.column: ' + this.column);
-    this.layout();
+      // console.log('this.column: ' + this.column);
+      this.layout();
+   }
   }
 
   layout() {
