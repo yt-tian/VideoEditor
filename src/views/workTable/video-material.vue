@@ -70,7 +70,7 @@
                                         <li>复制到...</li>
                                         <li>移动到...</li>
                                         <li>下载</li>
-                                        <li @click="() => deleteMediaChange(item.Id)">移入回收站</li>
+                                        <li @click="() => deleteMediaChange(item.Industryid,item.Id)">移入回收站</li>
                                     </ul>
                                 </div>
                             </div>
@@ -177,8 +177,9 @@ export default {
             deletelist:[],
             isCheck:false,
             checkVideoValue:false,
-            num:null,
-            fileList: []
+            num:0,
+            fileList: [],
+            IndustryId:null,
         }
     },
     computed: {
@@ -200,7 +201,9 @@ export default {
                 })
                 this.mediaList.push(...obj[key])
             }
-            this.fileList = arr
+            this.fileList = arr;
+            this.num = arr.length;
+            this.IndustryId 
             
             if (this.mediaList == '{}') {
                 this.mediaList = null;
@@ -307,9 +310,10 @@ export default {
             this.visibleFile = false
             this.dialogFormVisible = true;
         },
-        deleteMediaChange(item) {
-            this.deletelist[0] = item;
-            console.log(  this.deletelist);  
+        deleteMediaChange(id,item) {
+            this.deletelist = [...item];
+            this.IndustryId = id
+            console.log(this.IndustryId,this.deletelist);  
             // console.log(this.deletelist);
             deleteMedia(this.deletelist).then(res => {
                 if (res.data.code == 200)

@@ -90,11 +90,12 @@ export const getMediaList = ()=> request({
 
 })
 
-// 获取素材库视频接口
-export const deleteMedia = (MediaID)=> request({
+// 删除素材库视频接口
+export const deleteMedia = (IndustryId,MediaID)=> request({
   method: 'post',
   url: '/delete_media',
   data:{
+    IndustryId,
     MediaID
   }
 

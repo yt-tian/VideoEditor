@@ -31,8 +31,10 @@
       </div>
       <div class="upvote-wrap">
         <div class="upvote-left">
-          <span v-for="(item, index) in classifyList" @click="() => tabClassifyList(index)" :class="item.isActive ? 'fonColor' : ''"  :key="index">
-            {{ item.title }} <i class="classify-bg bg-default" :class="item.isActive ? 'bg-active' : 'bg-default'"></i> </span>
+          <span v-for="(item, index) in classifyList" @click="() => tabClassifyList(index)"
+            :class="item.isActive ? 'fonColor' : ''" :key="index">
+            {{ item.title }} <i class="classify-bg bg-default" :class="item.isActive ? 'bg-active' : 'bg-default'"></i>
+          </span>
         </div>
         <div class="upvote-right">
           <el-checkbox v-model="checked1" label="只看高清素材" class="look-High" />
@@ -42,27 +44,28 @@
         </div>
       </div>
       <ul class="wrap" id="VideoWrap" ref="VideoWrap" @scroll="orderScroll($event)" v-if="!Isloading">
-        <li  v-for="(item, index) in list" :key="index" >
+        <li v-for="(item, index) in list" :key="index" @click="()=>playVideoChange(item,index)">
           <!-- <video class="video" controls muted>
             <source :src="`${appBaseUrl}${item.Path}`" />
           </video> -->
+          
           <img :src="item.ImgUrl" />
           <div class="title-content">
             <p>{{ item.Title }}</p>
             <p>@{{ item.NickName }}</p>
             <div>
-              <p><span class="icon heart"></span> {{ item.DianZan}}</p>
-              <p> <span class="icon time"></span> {{ item.PublishTime }}</p>
+              <p><span class="icon heart"></span> {{ item.DianZan }}</p>
+              <p> <span class="icon time"></span> {{ item.Created }}</p>
               <p><span class="icon video-num"> </span>{{ item.Bofang }}</p>
             </div>
           </div>
-          <div class="trade"><span></span><i>抖音</i> </div>
-          <button class="importMaterial" @click="materialHander(item, index)">导入素材库</button>
+          <div class="trade"><img style="width: 15px; vertical-align: middle;margin-right: 5px;" :src="`${appBaseUrl}${item.Logo}`" alt=""><i>{{ item.VideoType }}</i> </div>
+          <button class="importMaterial" @click.stop="materialHander(item, index)">导入素材库</button>
         </li>
         <!-- <li class="seat" v-for="(item, i) of 10" :key="i"> </li> -->
       </ul>
-      
-      
+
+
     </div>
     <DialogView :title="'导入素材库'" v-model:visible.sync="dialogFormVisible" @updateVisible="updateVisible"
       @resetPopupData="resetPopupData" @submitPopupData="submitPopupData" @handleClose="handleClose" :width="'20%'">
@@ -71,18 +74,28 @@
       <button class="more" @click="moreChange" v-if="crawlBarFixed">爬取更多</button>
     </div>
     <div v-if="Isloading" class="loading">
-        <el-icon><Loading /></el-icon>loading...
-      </div>
+      <el-icon>
+        <Loading />
+      </el-icon>loading...
+    </div>
+    <div class="videoDialog-wrap">
+      <el-dialog v-model="dialogVideoVisible" width="50%" top="3%" id="videoDialog"  :before-close="handleVideoClose">
+           <video v-if="dialogVideoVisible" class="video" controls muted autoplay style="height:800px;width: 100%;">
+             <source :src="`${appBaseUrl}${videoPath}`" />
+           </video>
+      </el-dialog>
+    </div>
+     
   </div>
 </template>
 <script>
-import DialogView from '../../components/Dialog.vue'
-import { importMedia } from '../../api/index'
+import DialogView from '../../components/Dialog.vue';
+import { importMedia } from '../../api/index';
 import { getVideos } from "@/api/index";
 import WaterFall from '@/utils/WaterFall'
-import { sleep } from '@/utils/index'
+import { sleep } from '@/utils/index';
 import { ElMessage } from 'element-plus';
-import { getAssetsImgs, getVideoFirstFrame } from '@/utils'
+import { getAssetsImgs, getVideoFirstFrame } from '@/utils';
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 export default {
@@ -91,6 +104,8 @@ export default {
   },
   data() {
     return {
+      playVideoPath:'',
+      dialogVideoVisible: false,
       getAssetsImgs,
       appBaseUrl,
       tabsK: false,
@@ -234,9 +249,11 @@ export default {
       ],
       checked1: '11',
       IsHighVideo: false,
-      SizeType:0,
-      SortType:1,
-      Isloading:false,
+      SizeType: 0,
+      SortType: 1,
+      Isloading: false,
+      videoPath:'',
+      VideoType:['抖音'],
     };
   },
   computed: {},
@@ -306,6 +323,10 @@ export default {
     handleClose() {
       this.dialogFormVisible = false
     },
+    handleVideoClose(){
+      this.dialogVideoVisible = false
+
+    },
     async getVideoList(IsHighVideo, SizeType, SortType, checkList, keyword, sindex = 0) {
       // 校验时间上是否超过5分钟, 超过五分钟结束调用
       if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
@@ -314,10 +335,10 @@ export default {
       }
       const res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, sindex).catch(() => {
       });
-      if(res.data.data !== '{}'){
+      if (res.data.data !== '{}') {
         this.Isloading = false;
         // this.list.push(...res.data.data);
-      }else{
+      } else {
         this.Isloading = true;
       }
       // if (res.status !== 200) {
@@ -326,23 +347,25 @@ export default {
       //   return;
       // }
       // console.log("爬取数据", list);
-      
+
       if (Array.isArray(res.data.data) && res.data.data.length) {
         const originList = res.data.data;
-        for(let i = 0; i < Math.min(20, originList.length); i++) {
+        for (let i = 0; i < Math.min(20, originList.length); i++) {
           try {
             const { Path, Width, Heigth } = originList[i];
             console.log(Path, Width, Heigth);
             const ImgUrl = await getVideoFirstFrame('/' + Path, Width, Heigth);
             originList[i].ImgUrl = ImgUrl;
-          } catch(err) {
+          } catch (err) {
             console.log('getVideoFirstFrame: ' + err);
             originList[i].ImgUrl = '';
           }
-          this.list.push(originList[i]);
-          this.$nextTick(this.videoLayout.bind(this));
+          if (!this.list.map(o => o.Path).includes(originList[i].Path)) {
+            this.list.push(originList[i]);
+            this.$nextTick(this.videoLayout.bind(this));
+          }
         }
-        console.log(originList);  
+        console.log(originList);
       } else {
         if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
           ElMessage.info('没有该资源了哦!');
@@ -353,26 +376,30 @@ export default {
       }
       this.$nextTick(this.videoLayout.bind(this));
       await sleep(1000);
-      // console.log(this.list);
-      // if (this.list.length < 20) {  
-      //   console.log("this.list.length:",this.list.length);
-      //   this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title, this.mediaClassification[2].title], this.keyword, this.list.length);
-      // } 
+      console.log(this.list);
+      if (this.list.length < 20) {
+        console.log("this.list.length:", this.list.length);
+        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.list.length);
+      }
     },
-     searchVideo() {
+    searchVideo() {
+      this.VideoType[0] = '抖音';
+      this.VideoType[1] = '快手';
       if (this.list.length > 1) {
         this.list = [];
       }
-      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title, this.mediaClassification[2].title], this.keyword, this.list.length);
+      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.list.length);
     },
     tabClick(i) {
       this.mediaClassification.forEach((item, index) => {
         item.isActive = i === index;
+        if(i == 1) this.VideoType[0] = "抖音";
+        if(i == 2) this.VideoType[0] = "快手";
         if (i === index && i !== 0) {
           if (this.list.length > 1) {
             this.list = [];
           }
-          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [item.title], this.keyword, this.num);
+          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.num);
 
         }
       });
@@ -380,30 +407,40 @@ export default {
     tabLayoutClick(i) {
       this.layoutList.forEach((item, index) => {
         item.isActive = i === index;
-        this.layoutList.SizeType = i
+        this.SizeType = i
         if (this.list.length > 1) {
-            this.list = [];
-          }
-        this.getVideoList(this.IsHighVideo, i, this.SortType, [this.mediaClassification[1].title], this.keyword, this.num);
+          this.list = [];
+        }
+        this.getVideoList(this.IsHighVideo, i, this.SortType, this.VideoType, this.keyword, this.num);
       })
     },
     tabDurationClick(i) {
       this.durationList.forEach((item, index) => {
         item.isActive = i === index;
         if (this.list.length > 1) {
-            this.list = [];
-          }
+          this.list = [];
+        }
         // this.getVideoList(this.IsHighVideo,i,this.SortType,[item.title], this.keyword, this.list.length);
       })
     },
-    tabClassifyList(i){
+    tabClassifyList(i) {
+      console.log("tabClassifyList:", i);
       this.classifyList.forEach((item, index) => {
         item.isActive = i === index;
+        if (i == 0) this.SortType = 1;
+        if (i == 1) this.SortType = 2;
         if (this.list.length > 1) {
-            this.list = [];
-          }
-        this.getVideoList(this.IsHighVideo,this.SizeType,this.SortType,[this.mediaClassification[1].title], this.keyword, this.num);
+          this.list = [];
+        }
+        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title], this.keyword, this.num);
       })
+    },
+    playVideoChange(item,i){
+      console.log("item:::::", item,"index*******:",i);
+      // this.$nextTick(()=>{
+        this.videoPath = item.Path;
+      // })
+      this.dialogVideoVisible = true;
     }
   }
 };
@@ -506,7 +543,8 @@ export default {
             background: url(../../assets/images/up-icon-active.png) center center no-repeat;
           }
         }
-        .fonColor{
+
+        .fonColor {
           color: #1157FC;
         }
       }
@@ -635,10 +673,12 @@ export default {
         left: 0;
         right: 0;
         width: 240px;
-        img{
+        cursor: pointer;
+
+        img {
           width: 100%;
         }
-        
+
         // margin: 8px;
         // height: 320px;
         // margin-bottom: 30px;
@@ -680,7 +720,7 @@ export default {
 
           >div {
             display: flex;
-            flex-wrap:wrap;
+            flex-wrap: wrap;
 
             >p {
               padding: 8px 6px;
@@ -721,8 +761,12 @@ export default {
   }
 
 }
-.loading{
+
+.loading {
   position: absolute;
   left: 50%;
+}
+.videoDialog-wrap>.el-overlay>.el-overlay-dialog>#videoDialog{
+  --el-dialog-bg-color: none;
 }
 </style>
