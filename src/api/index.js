@@ -10,7 +10,7 @@ keyword：关键字
 num：一次数量
 sindex：从第几条开始爬取
 */
-export const getVideos = (IsHighVideo,SizeType,SortType,VideoType,keyword, sindex = 0, num = 20,) => request({
+export const getVideos = (IsHighVideo,SizeType,SortType,VideoType,keyword,DateLimit, sindex = 0, num = 20) => request({
   method: 'post',
   url: '/get_videos',
   data: {
@@ -20,7 +20,8 @@ export const getVideos = (IsHighVideo,SizeType,SortType,VideoType,keyword, sinde
     VideoType,
     keyword,
     num,
-    sindex
+    sindex,
+    DateLimit
   }
 });
 // 获取抖音视频接口

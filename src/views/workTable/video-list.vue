@@ -37,17 +37,17 @@
           </span>
         </div>
         <div class="upvote-right">
-          <el-checkbox v-model="checked1" label="只看高清素材" class="look-High" />
-          <button>3日</button>
-          <button class="boder-none">7日</button>
-          <button>30日</button>
+          <el-checkbox v-model="checked1" @change="isHighHandle" label="只看高清素材" class="look-High" />
+          <button @click="getVideosByDateLimit(0)">不限</button>
+          <button @click="getVideosByDateLimit(7)" class="boder-none">一周</button>
+          <button @click="getVideosByDateLimit(182)">半年</button>
         </div>
       </div>
       <ul class="wrap" id="VideoWrap" ref="VideoWrap" @scroll="orderScroll($event)" v-if="!Isloading">
         <li v-for="(item, index) in list" :key="index" @click="()=>playVideoChange(item,index)">
-          <!-- <video class="video" controls muted>
+          <video class="video" controls muted>
             <source :src="`${appBaseUrl}${item.Path}`" />
-          </video> -->
+          </video>
           
           <img :src="item.ImgUrl" />
           <div class="title-content">
@@ -62,7 +62,6 @@
           <div class="trade"><img style="width: 15px; vertical-align: middle;margin-right: 5px;" :src="`${appBaseUrl}${item.Logo}`" alt=""><i>{{ item.VideoType }}</i> </div>
           <button class="importMaterial" @click.stop="materialHander(item, index)">导入素材库</button>
         </li>
-        <!-- <li class="seat" v-for="(item, i) of 10" :key="i"> </li> -->
       </ul>
 
 
@@ -95,7 +94,7 @@ import { getVideos } from "@/api/index";
 import WaterFall from '@/utils/WaterFall'
 import { sleep } from '@/utils/index';
 import { ElMessage } from 'element-plus';
-import { getAssetsImgs, getVideoFirstFrame } from '@/utils';
+import { getAssetsImgs } from '@/utils';
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL;
 
 export default {
@@ -114,7 +113,6 @@ export default {
       crawlBarFixed: false, //爬取更多显隐
       dialogFormVisible: false, //导入素材库弹窗显隐
       MediaID: [],
-      // checkBoxList: ['抖音', '快手', '小红书', '今日头条'],
       mediaClassification: [
         { title: '全部', isActive: true, },
         { title: '抖音', img: 'douyin', isActive: false, },
@@ -247,8 +245,9 @@ export default {
         //   "updated": "2023-05-17T22:11:38.084+08:00"
         // }
       ],
-      checked1: '11',
+      checked1: 0,
       IsHighVideo: false,
+      DateLimit: 0,
       SizeType: 0,
       SortType: 1,
       Isloading: false,
@@ -259,9 +258,6 @@ export default {
   computed: {},
   mounted() {
     window.addEventListener('resize', this.videoLayout.bind(this))
-    // getVideoFirstFrame('https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', 300, 200).then(res => {
-    //   console.log(res);
-    // });
   },
   methods: {
     videoLayout() {
@@ -327,20 +323,26 @@ export default {
       this.dialogVideoVisible = false
 
     },
-    async getVideoList(IsHighVideo, SizeType, SortType, checkList, keyword, sindex = 0) {
+    async getVideoList(IsHighVideo, SizeType, SortType, checkList, keyword, DateLimit, sindex = 0) {
       // 校验时间上是否超过5分钟, 超过五分钟结束调用
       if (new Date().getTime() - this.startTime > 5 * 60 * 1000) {
         ElMessage.info('请求超时!');
         return;
       }
-      const res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, sindex).catch(() => {
-      });
-      if (res.data.data !== '{}') {
-        this.Isloading = false;
-        // this.list.push(...res.data.data);
-      } else {
-        this.Isloading = true;
+      
+      let res = null;
+      for(let i=0;i<5;i++){
+        res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, DateLimit, sindex).catch(() => {});
+        if (res.data.data !== '{}') {
+          this.Isloading = false;
+          break;
+          // this.list.push(...res.data.data);
+        } else {
+          this.Isloading = true;
+          await sleep(5000);
+        }
       }
+      
       // if (res.status !== 200) {
       //   console.log("httpCode");
       //   this.moreRequest = false;
@@ -349,37 +351,22 @@ export default {
       // console.log("爬取数据", list);
 
       if (Array.isArray(res.data.data) && res.data.data.length) {
-        const originList = res.data.data;
-        for (let i = 0; i < Math.min(20, originList.length); i++) {
-          try {
-            const { Path, Width, Heigth } = originList[i];
-            console.log(Path, Width, Heigth);
-            const ImgUrl = await getVideoFirstFrame('/' + Path, Width, Heigth);
-            originList[i].ImgUrl = ImgUrl;
-          } catch (err) {
-            console.log('getVideoFirstFrame: ' + err);
-            originList[i].ImgUrl = '';
-          }
-          if (!this.list.map(o => o.Path).includes(originList[i].Path)) {
-            this.list.push(originList[i]);
-            this.$nextTick(this.videoLayout.bind(this));
-          }
-        }
-        console.log(originList);
+        this.list = res.data.data;
       } else {
-        if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
+        //if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
+          this.list = [];
           ElMessage.info('没有该资源了哦!');
           this.Isloading = false
           return;
-        }
-        await sleep(5000);
+        //}
+        //await sleep(5000);
       }
       this.$nextTick(this.videoLayout.bind(this));
       await sleep(1000);
       console.log(this.list);
       if (this.list.length < 20) {
         console.log("this.list.length:", this.list.length);
-        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.list.length);
+        // this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.list.length);
       }
     },
     searchVideo() {
@@ -388,7 +375,7 @@ export default {
       if (this.list.length > 1) {
         this.list = [];
       }
-      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.list.length);
+      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.list.length);
     },
     tabClick(i) {
       this.mediaClassification.forEach((item, index) => {
@@ -399,7 +386,7 @@ export default {
           if (this.list.length > 1) {
             this.list = [];
           }
-          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.num);
+          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.num);
 
         }
       });
@@ -411,7 +398,7 @@ export default {
         if (this.list.length > 1) {
           this.list = [];
         }
-        this.getVideoList(this.IsHighVideo, i, this.SortType, this.VideoType, this.keyword, this.num);
+        this.getVideoList(this.IsHighVideo, i, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.num);
       })
     },
     tabDurationClick(i) {
@@ -432,8 +419,13 @@ export default {
         if (this.list.length > 1) {
           this.list = [];
         }
-        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title], this.keyword, this.num);
+        this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title], this.keyword, this.DateLimit, this.num);
       })
+    },
+    getVideosByDateLimit(val) {
+      this.DateLimit = val;
+      console.log("DateLimit",this.DateLimit);
+      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.list.length);
     },
     playVideoChange(item,i){
       console.log("item:::::", item,"index*******:",i);
@@ -441,6 +433,10 @@ export default {
         this.videoPath = item.Path;
       // })
       this.dialogVideoVisible = true;
+    },
+    isHighHandle(val){
+      console.log("isHighHandle",val)
+      this.IsHighVideo = val?true:false;
     }
   }
 };
@@ -652,24 +648,24 @@ export default {
     }
 
     .wrap {
-      // display: flex;
-      // flex-wrap: wrap;
+      display: flex;
+      flex-wrap: wrap;
       // /* border: 1px solid pink; */
-      // justify-content: center;
+      justify-content: space-between;
       width: 100%;
       height: calc(100% - 300px);
       overflow-y: scroll;
       // gap: 16px;
       padding-bottom: var(--reduction-height);
-      position: relative;
+      //position: relative;
 
       >li {
 
         display: flex;
         flex-wrap: wrap;
-        // justify-content: center;
+        //justify-content: center;
         align-items: center;
-        position: absolute;
+        //position: absolute;
         left: 0;
         right: 0;
         width: 240px;
@@ -680,7 +676,7 @@ export default {
         }
 
         // margin: 8px;
-        // height: 320px;
+        //height: 100%;
         // margin-bottom: 30px;
         // border: 1px solid rgba(0, 0, 0, 0.08);
 
@@ -689,7 +685,7 @@ export default {
           width: 240px;
           border-top-left-radius: 5px;
           border-top-right-radius: 5px;
-          // height: 320px;
+          //height: 100%;
         }
 
         .trade {
