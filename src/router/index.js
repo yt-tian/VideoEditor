@@ -8,6 +8,8 @@ import authView from '@/views/auth/index.vue';
 import workTable from '@/views/workTable/index.vue';
 import material from '@/views/workTable/video-material.vue';
 import videoList from '@/views/workTable/video-list.vue';
+import staging from '@/views/workTable/staging.vue';
+import videoSplit from '@/views/workTable/video-split.vue';
 import loginView from '@/views/auth/login.vue';
 import notFindView from '@/views/404.vue'
 
@@ -75,8 +77,23 @@ const router = createRouter({
           path:'videoList',
           name:'videoList',
           component:videoList
+        },
+        {
+          path:'staging',
+          name:'staging',
+          component:staging
+        },
+        {
+          path:'videoSplit',
+          name:'videoSplit',
+          component:videoSplit
         }
       ]
+    },
+    {
+      path:'/videoSplit',
+      name:'videoSplit',
+      component:videoSplit
     },
     {
       path: '/404',

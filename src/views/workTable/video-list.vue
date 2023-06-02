@@ -56,6 +56,7 @@
             <div>
               <p><span class="icon heart"></span> {{ item.DianZan }}</p>
               <p> <span class="icon time"></span> {{ item.Created }}</p>
+              <!-- <p> <span class="icon time"></span> {{ converDate(item.Created) }}</p> -->
               <p><span class="icon video-num"> </span>{{ item.Bofang }}</p>
             </div>
           </div>
@@ -255,9 +256,14 @@ export default {
       VideoType:['抖音'],
     };
   },
-  computed: {},
+  computed: {
+    // converDate:function(date){
+    //   console.log("converDate",date);
+    //   return date;
+    // }
+  },
   mounted() {
-    window.addEventListener('resize', this.videoLayout.bind(this))
+    //window.addEventListener('resize', this.videoLayout.bind(this))
   },
   methods: {
     videoLayout() {
@@ -301,9 +307,9 @@ export default {
       this.dialogFormVisible = false
     },
     // 点击确定的按钮
-    async submitPopupData(industryId) {
-      console.log(this.MediaID, this.MediaType, industryId);
-      importMedia(this.MediaID, this.MediaType, industryId).then(res => {
+    async submitPopupData(folderName) {
+      console.log(this.MediaID, this.MediaType, folderName);
+      importMedia(this.MediaID, folderName, this.MediaType).then(res => {
         console.log("导入素材库返回：", res);
         this.$message({
           message: '导入成功！',
@@ -331,8 +337,12 @@ export default {
       }
       
       let res = null;
-      for(let i=0;i<5;i++){
-        res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, DateLimit, sindex).catch(() => {});
+      for(let i=0;i<24;i++){
+        res = await getVideos(IsHighVideo, SizeType, SortType, checkList, keyword, DateLimit, sindex).catch((err) => {
+          console.log(err);
+          ElMessage.info('网络或系统异常!');
+          return;
+        });
         if (res.data.data !== '{}') {
           this.Isloading = false;
           break;
@@ -352,6 +362,7 @@ export default {
 
       if (Array.isArray(res.data.data) && res.data.data.length) {
         this.list = res.data.data;
+        //this.$nextTick(this.list = res.data.data);
       } else {
         //if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
           this.list = [];
@@ -361,8 +372,8 @@ export default {
         //}
         //await sleep(5000);
       }
-      this.$nextTick(this.videoLayout.bind(this));
-      await sleep(1000);
+      //this.$nextTick(this.videoLayout.bind(this));
+      //await sleep(1000);
       console.log(this.list);
       if (this.list.length < 20) {
         console.log("this.list.length:", this.list.length);
@@ -386,7 +397,7 @@ export default {
           if (this.list.length > 1) {
             this.list = [];
           }
-          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.num);
+          this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, 0);
 
         }
       });
@@ -422,10 +433,49 @@ export default {
         this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, [this.mediaClassification[1].title], this.keyword, this.DateLimit, this.num);
       })
     },
-    getVideosByDateLimit(val) {
+    async getVideosByDateLimit(val) {
       this.DateLimit = val;
       console.log("DateLimit",this.DateLimit);
-      this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, this.list.length);
+      this.VideoType[0] = '抖音';
+      this.VideoType[1] = '快手';
+      // if (this.list.length > 1) {
+      //   this.list = [];
+      // }
+      //this.getVideoList(this.IsHighVideo, this.SizeType, this.SortType, this.VideoType, this.keyword, this.DateLimit, 0);
+
+      let res = null;
+      for(let i=0;i<24;i++){
+        res = await getVideos(this.IsHighVideo, this.SizeType, this.SortType,this.VideoType, this.keyword, this.DateLimit, 0).catch(() => {});
+        if (res.data.data !== '{}') {
+          this.Isloading = false;
+          break;
+          // this.list.push(...res.data.data);
+        } else {
+          this.Isloading = true;
+          await sleep(5000);
+        }
+      }
+      
+      // if (res.status !== 200) {
+      //   console.log("httpCode");
+      //   this.moreRequest = false;
+      //   return;
+      // }
+      // console.log("爬取数据", list);
+
+      if (Array.isArray(res.data.data) && res.data.data.length) {
+        this.list = res.data.data;
+        //this.$nextTick(this.list = res.data.data);
+      } else {
+        //if (new Date().getTime() - this.startTime > 1 * 60 * 1000) {
+          this.list = [];
+          ElMessage.info('没有该资源了哦!');
+          this.Isloading = false
+          return;
+        //}
+        //await sleep(5000);
+      }
+      this.$nextTick(this.videoLayout.bind(this));
     },
     playVideoChange(item,i){
       console.log("item:::::", item,"index*******:",i);
@@ -651,7 +701,7 @@ export default {
       display: flex;
       flex-wrap: wrap;
       // /* border: 1px solid pink; */
-      justify-content: space-between;
+      justify-content: flex-start;
       width: 100%;
       height: calc(100% - 300px);
       overflow-y: scroll;
@@ -670,6 +720,7 @@ export default {
         right: 0;
         width: 240px;
         cursor: pointer;
+        margin-right: 24px;
 
         img {
           width: 100%;

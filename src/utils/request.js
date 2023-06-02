@@ -10,7 +10,8 @@ const service = axios.create({
 service.interceptors.request.use(config => {
    config.data = JSON.stringify(config.data); 
    config.headers = {
-     'Content-Type':'application/x-www-form-urlencoded' 
+    //  'Content-Type':'application/x-www-form-urlencoded' 
+    'Content-Type':'application/json'
    }
    const token = sessionStorage.getItem('Authorization');
    if(token){

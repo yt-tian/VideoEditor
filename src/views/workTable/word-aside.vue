@@ -7,7 +7,7 @@
         @open="handleOpen"
         @close="handleClose"
       >
-      <el-menu-item index="1">
+      <el-menu-item index="1" @click="()=>stagingChange()">
           <el-icon><DataAnalysis/></el-icon>
           <span>工作台</span>
         </el-menu-item>
@@ -53,6 +53,9 @@ export default {
     },
     handleClose(key, keyPath) {
       console.log(key, keyPath);
+    },
+    stagingChange(){
+      this.$router.push('/workTable/staging')
     },
     materialChange() {
       this.$router.push('/workTable/material')

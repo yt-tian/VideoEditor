@@ -4,8 +4,8 @@
             <el-form :model="form">
                 <el-form-item label="行业分组" :label-width="formLabelWidth">
                 </el-form-item>
-                <el-select v-model="form.region" placeholder="农业和食品行业">
-                    <el-option :label="item.industry" v-for="(item, index) in form.type" :value="item.id"
+                <el-select v-model="folderName" placeholder="选择文件夹">
+                    <el-option :label="item" v-for="(item, index) in fileList" :value="item"
                         :key="index"></el-option>
                 </el-select>
             </el-form>
@@ -17,7 +17,7 @@
     </div>
 </template>
 <script>
-import { getIndustryLsit } from '../api/index'
+//import { getIndustryLsit,getMediaList } from '../api/index'
 
 export default {
     props: {
@@ -41,7 +41,9 @@ export default {
                 region: '',
                 type: [],
             },
-            formLabelWidth: '120px'
+            formLabelWidth: '120px',
+            fileList: [],
+            folderName: ''
         }
     },
     watch: {
@@ -58,13 +60,17 @@ export default {
             }
         }
     },
+    created(){
+        this.getMediaFolder();
+    },
     mounted() {
-        getIndustryLsit().then(res => {
-            const list = JSON.stringify(res.data.data);
-            this.form.type = JSON.parse(list);
-            console.log("getIndustryLsit:", this.form.type);
+        // getIndustryLsit().then(res => {
+        //     const list = JSON.stringify(res.data.data);
+        //     this.form.type = JSON.parse(list);
+        //     console.log("getIndustryLsit:", this.form.type);
 
-        })
+        // })
+
     },
     methods: {
         Cancel() {
@@ -73,12 +79,31 @@ export default {
         },
         Save() {
             // console.log("行业",this.form.region);
-            this.$emit('submitPopupData', this.form.region)
+            this.$emit('submitPopupData', this.folderName)
         },
         handleClose() {
             this.form.region = '';
             this.$emit('handleClose')
-        }
+        },
+        // 获取媒体文件夹
+        getMediaFolder(){
+            this.$http.get('/get_media_folder')
+            .then(res => {
+                if(res.data.code !== 200){
+                    //console.log("aaa",res);
+                    return;
+                }
+                if(res.data.data && res.data.data.length>0){
+                    this.fileList = res.data.data;
+                    //console.log("getMediaFolder",this.fileList);
+                }
+                //console.log("getMediaFolder",res.data);
+            })
+            .catch(err => {
+                this.$message.error("网络或系统异常！")
+                console.log(err);
+            })
+        },
     },
 }
 </script>

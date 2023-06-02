@@ -63,13 +63,13 @@ export const getIndustryLsit = ()=> request({
 })
 
 // 上传爬取素材库接口
-export const importMedia = (MediaID, MediaType, industryId)=> request({
+export const importMedia = (MediaID, MediaPath, MediaType)=> request({
   method: 'post',
   url: '/import_media_byid',
   data:{
     MediaID,
-    MediaType,
-    industryId
+    MediaPath,
+    MediaType
   }
 })
 

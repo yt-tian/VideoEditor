@@ -2,27 +2,29 @@
     <div class="material-page">
         <div>
             <div class="all-file-left">
-                <i class="file-img"></i> <span>全部行业</span>
+                <i class="file-img"></i> <span>全部文件夹</span>
             </div>
             <div class="all-file-right">
                 <div class="upload" @click="() => uploadFild()">
                     <div>
                         <span class="file-load"></span>
-                        <span class="add-file">上传素材库</span>
+                        <span class="add-file">上传素材</span>
                     </div>
                 </div>
-                <!-- <div class="upload">
+                <div class="upload">
                     <div>
-                        <span class="add img"></span> <span class="add">添加</span>
+                        <span class="add img"></span> <span class="add" @click="addFolder()">添加</span>
                     </div>
-                </div> -->
+                </div>
             </div>
         </div>
         <div class="subfolder">
             <div>
-                <div>行业分类 <span style="color: #999;">({{ num}})</span> <el-icon>
+                <div>子文件夹 <span style="color: #999;">({{ num}})</span> 
+                    <el-icon>
                         <CaretRight class="careRight" color="#999" />
-                    </el-icon> </div>
+                    </el-icon> 
+                </div>
             </div>
             <div class="sub-right">
                 <div>全部尺寸 <el-icon>
@@ -141,6 +143,15 @@
         <DialogView :title="'导入素材库'" v-model:visible.sync="dialogFormVisible" @updateVisible="updateVisible"
             @resetPopupData="resetPopupData" @submitPopupData="submitPopupData" @handleClose="handleClose" :width="'20%'">
         </DialogView>
+
+        <!-- 添加文件夹弹出框 -->
+        <el-dialog title="添加文件夹" v-model="addFolderVisible" :destroy-on-close="true" width="30%" top="20%">
+            <el-input v-model="folderName" placeholder="输入文件夹名称"></el-input>
+            <div vlot:="footer" class="dialog-footer">
+                <el-button @click="cancelAddFolder()">取 消</el-button>
+                <el-button type="primary" @click="addFolderSubmit">确 认</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 <script>
@@ -159,6 +170,8 @@ export default {
             number: 0,
             value1: true,
             dialogVisible: false,
+            addFolderVisible: false,
+            folderName: '',
             visibleFile: false,
             dialogFormVisible: false,
             MediaType: 'MediaType',
@@ -187,6 +200,9 @@ export default {
             return `/api/v1/import_media_byfile?MediaType=${this.uploadData.MediaType}&IndustryId=${this.uploadData.IndustryId}`
         }
     },
+    created() {
+        //this.getMediaFolder();
+    },
     mounted() {
        
         getMediaList().then(res => {
@@ -214,12 +230,65 @@ export default {
         })
     },
     methods: {
-        fileDirClick(item) {
-            console.log(JSON.parse(JSON.stringify(item.list)));
-            this.mediaList = [];
-            this.$nextTick(() => {
-                this.mediaList = JSON.parse(JSON.stringify(item.list))
+        // 获取媒体文件夹
+        getMediaFolder(){
+            this.$http.get('/get_media_folder')
+            .then(res => {
+                if(res.data.code !== 200){
+                    //console.log("aaa",res);
+                    return;
+                }
+                if(res.data.data && res.data.data.length>0){
+                    this.fileList = res.data.data;
+                    //console.log("getMediaFolder",this.fileList);
+                }
+                //console.log("getMediaFolder",res.data);
             })
+            .catch(err => {
+                this.$message.error("网络或系统异常！")
+                console.log(err);
+            })
+        },
+        // 添加文件夹
+        addFolder(){
+            this.addFolderVisible = true;
+        },
+        // 关闭添加文件夹弹窗
+        cancelAddFolder(){
+            this.addFolderVisible = false;
+        },
+        // 添加文件夹
+        addFolderSubmit(){
+            if(!this.folderName || this.folderName.length===0){
+                this.$message.warning("文件夹名称不能为空");
+                return;
+            }
+            if(this.fileList.length > 0 && this.fileList.indexOf(this.folderName) !== -1){
+                this.$message.warning("文件夹名称已存在");
+                return;
+            }
+            this.$http.post('/add_media_folder',{"MediaPath":this.folderName,"MediaType": "video"})
+            .then(res => {
+                if(res.data.code != 200){
+                    console.log(res.data);
+                    return;
+                }
+                this.$message.success("添加成功");
+                this.addFolderVisible = false;
+                this.getMediaFolder();
+            })
+            .catch(err => {
+                this.$message.error("网络或系统异常！")
+                console.log(err);
+            })
+        },
+        fileDirClick(item) {
+            //console.log(JSON.parse(JSON.stringify(item.list)));
+            this.mediaList = [];
+            this.mediaList = JSON.parse(JSON.stringify(item.list))
+            // this.$nextTick(() => {
+            //     this.mediaList = JSON.parse(JSON.stringify(item.list))
+            // })
             
         },
         upLoadRequest(option) {
@@ -715,6 +784,37 @@ export default {
         }
     }
 
+}
+
+:deep(.dialog-footer) {
+    display: flex;
+    justify-content: right;
+    padding: 15px 20px 15px;
+    font-size: 16px;
+    font-weight: bold;
+
+    .el-button {
+        border: none;
+        color: #151515;
+        height: 44px;
+
+        >span {
+            font-size: 14px;
+            font-weight: 700;
+
+        }
+    }
+
+    :deep(.el-select .el-input__wrapper) {
+        padding: 6px 11px;
+    }
+
+    .el-button--primary {
+        >span {
+            color: #fff;
+        }
+
+    }
 }
 </style>
   
