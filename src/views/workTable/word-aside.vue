@@ -23,7 +23,7 @@
           <el-icon><Mic /></el-icon>
           <span>音频库</span>
         </el-menu-item>
-        <el-menu-item index="4">
+        <el-menu-item index="4" @click="()=>aiCopywritingChange()">
           <el-icon><setting /></el-icon>
           <span>AI文案</span>
         </el-menu-item>
@@ -61,7 +61,10 @@ export default {
       this.$router.push('/workTable/material')
     },
     videoChange(){
-      this.$router.push('/home/video')
+      // this.$router.push('/home/video')
+    },
+    aiCopywritingChange(){
+      this.$router.push('/workTable/aiCopywriting')
     },
     getVideo(){
       this.$router.push('/workTable/videoList')

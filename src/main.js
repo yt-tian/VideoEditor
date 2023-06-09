@@ -5,7 +5,7 @@ import '@/assets/style/main.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElMessageBox } from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
@@ -22,6 +22,8 @@ app.use(ElementPlus)
 app.use(createPinia())
 app.use(router)
 app.config.globalProperties.$http = service
+app.config.globalProperties.$router = router
 app.config.globalProperties.$message = ElMessage
+app.config.globalProperties.$messagebox = ElMessageBox
 
 app.mount('#app')

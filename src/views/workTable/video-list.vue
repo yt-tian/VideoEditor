@@ -138,7 +138,7 @@ export default {
         { title: '最新发布', isActive: false, SortType: 2, },
       ],
       MediaType: 'video',
-      keyword: '猫',
+      keyword: '冰丝裤',
       list: [
         // {
         //   "Created": "2023-05-17T22:11:09.949+08:00",

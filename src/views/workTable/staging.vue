@@ -2,11 +2,11 @@
     <div class="container">
         <div class="create-now">
             <el-space size="large">
-                <span><img src="@/assets/images/video-split.png" /></span>
-                <span><img src="@/assets/images/video-cut.png" @click="videoSplit()"/></span>
+                <span><img src="@/assets/images/video-split.png" @click="videoSplit()" /></span>
+                <span><img src="@/assets/images/video-cut.png" /></span>
             </el-space>
         </div>
-        <div class="create-last">aaa</div>
+        <div class="create-last">最近创作</div>
     </div>
 </template>
 <script>

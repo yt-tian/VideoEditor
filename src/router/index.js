@@ -10,6 +10,7 @@ import material from '@/views/workTable/video-material.vue';
 import videoList from '@/views/workTable/video-list.vue';
 import staging from '@/views/workTable/staging.vue';
 import videoSplit from '@/views/workTable/video-split.vue';
+import aiCopywriting from '@/views/workTable/ai-copywriting.vue';
 import loginView from '@/views/auth/login.vue';
 import notFindView from '@/views/404.vue'
 
@@ -25,7 +26,7 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: layout,
-      redirect: '/home/video',
+      redirect: '/workTable/material',
       children: [
         {
           path: 'video',
@@ -87,6 +88,11 @@ const router = createRouter({
           path:'videoSplit',
           name:'videoSplit',
           component:videoSplit
+        },
+        {
+          path:'aiCopywriting',
+          name:'aiCopywriting',
+          component:aiCopywriting
         }
       ]
     },

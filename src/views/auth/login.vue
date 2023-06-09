@@ -43,7 +43,7 @@ export default {
           const token = res.data.data.token
           sessionStorage.setItem('Authorization', token)
           if (res.data.code == 200) {
-            this.$router.push('/home/video')
+            this.$router.push('/')
             this.$message({
               message: '登录成功！',
               type: 'success'

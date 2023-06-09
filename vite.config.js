@@ -34,7 +34,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     headers: {
-      'Access-Control-Allow-Origin': 'http://119.23.230.233/'
+      'Access-Control-Allow-Origin': 'http://119.23.230.233/,http://8.210.20.223/'
     },
     proxy: {
       '/api': {
@@ -46,6 +46,15 @@ export default defineConfig({
       '/reptile_video': {
         target: 'http://119.23.230.233/',
         changeOrigin: true,
+      },
+      '/ai_api': {
+        target: 'http://8.210.20.223/',
+        changeOrigin: true,
+        // onProxyRes(proxyRes,req,res){
+        //   const realUrl = new URL(req.url || '','http://8.210.20.223/' || '')
+        //   proxyRes.headers['x-real-url1'] = realUrl
+        // },
+        logLevel: 'debug'
       }
     }
   }

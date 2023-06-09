@@ -42,10 +42,13 @@
             <ul class="industry-wrap">
                 <li v-for="(item, index) in fileList " :key="index" @click="fileDirClick(item)">
                     <img src="@/assets/images/file-img.png" alt="">
+                    <div class="folder-mask">
+                        <div class="del-icon" @click="delFolder(item)"><el-icon><DeleteFilled /></el-icon></div>
+                    </div>
                     <div>{{ item.key }}</div>
                 </li>
             </ul>
-            <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{num}})</span>
+            <div style="position: relative;font-size: 14px;"> 内容 <span style="color: #999;">({{mediaList.length}})</span>
                 <el-icon>
                     <CaretRight class="careRight" color="#999" />
                 </el-icon>
@@ -54,14 +57,14 @@
             <div style="height:100%">
                 <ul class="get-content">
                     <li v-for="(item, index) in mediaList " :key="index">
-                        <video class="video" controls muted>
-                            <source :src="`${appBaseUrl}${item.Path}`" />
+                        <video class="video" controls muted :src="`${appBaseUrl}${item.Path}`">
+                            <!-- <source :src="`${appBaseUrl}${item.Path}`" /> -->
                         </video>
-                        <div>新建视频{{ item.Created }}</div>
-                        <div class="mask-item">
+                        <div>{{ item.FileName }}</div>
+                        <div class="mask-item" :class="{selected:item.checked,unselected:!item.checked}">
                             <div>
-                                <el-checkbox v-model="isCheck" checked label="" size="large" class="checkbox" />
-                                <span class="mixed-shear">混剪</span>
+                                <el-checkbox v-model="item.checked" :checked="item.checked" label="" size="large" class="checkbox" @change="checkChange($event,item,index)" />
+                                <!-- <span class="mixed-shear">混剪</span> -->
                             </div>
                             <div class="edit-wrap">
                                 <button class="edit">编辑</button>
@@ -72,7 +75,7 @@
                                         <li>复制到...</li>
                                         <li>移动到...</li>
                                         <li>下载</li>
-                                        <li @click="() => deleteMediaChange(item.Industryid,item.Id)">移入回收站</li>
+                                        <li @click="() => deleteMediaChange(item)">移入回收站</li>
                                     </ul>
                                 </div>
                             </div>
@@ -93,8 +96,8 @@
         </div>
         <div class="check-all" v-if="isCheck">
             <div class="check-left">
-                <el-checkbox v-model="checked1" label="全选" />
-                <span style="font-size: 14px;color: #999;">已选择 {{ 0 }}</span> <span class="line"></span>
+                <el-checkbox v-model="isSelectAll" :checked="isSelectAll" label="全选" @change="selectAllHandle($event)" />
+                <span style="font-size: 14px;color: #999;">已选择 {{ selectedList.length }}</span> <span class="line"></span>
                 <button class="button">创建副本</button>
                 <button class="button">移动到...</button>
                 <button class="button">复制到...</button>
@@ -156,10 +159,9 @@
 </template>
 <script>
 import DialogView from '../../components/Dialog.vue'
-import { importMediaFile, getMediaList, deleteMedia } from '../../api/index'
+import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder } from '../../api/index'
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
 import axios from 'axios'
-
 export default {
     components: {
         DialogView
@@ -168,6 +170,8 @@ export default {
         return {
             appBaseUrl,
             number: 0,
+            checked1: false,
+            isSelectAll: false,
             value1: true,
             dialogVisible: false,
             addFolderVisible: false,
@@ -175,6 +179,7 @@ export default {
             visibleFile: false,
             dialogFormVisible: false,
             MediaType: 'MediaType',
+            videoType: 'video',
             file: '@/assets/video/video1.mp4',
             isEmpty: false,
             uploadData: {
@@ -193,6 +198,7 @@ export default {
             num:0,
             fileList: [],
             IndustryId:null,
+            selectedList: [] // 选中列表
         }
     },
     computed: {
@@ -204,32 +210,49 @@ export default {
         //this.getMediaFolder();
     },
     mounted() {
-       
-        getMediaList().then(res => {
-            console.log("获取素材库视频", res.data.data);
-            // const dataTime = res.data.data
-            const obj = res.data.data.MVideos;
-            const arr = []
-            for (const key in obj) {
-                arr.push({
-                    key: key,
-                    list: obj[key]
-                })
-                this.mediaList.push(...obj[key])
-            }
-            this.fileList = arr;
-            this.num = arr.length;
-            this.IndustryId 
-            
-            if (this.mediaList == '{}') {
-                this.mediaList = null;
-                this.num = 0
-                this.isEmpty = true;
-            }
-
-        })
+       this.getFoldersByMedia();
     },
     methods: {
+        // 通过媒体接口获取文件夹
+        getFoldersByMedia(){
+            getMediaList().then(res => {
+                console.log("获取素材库视频", res.data.data);
+                if(res.data.code != 200){
+                    console.log(res.data);
+                    this.$message.error(res.data.msg);
+                    return;
+                }
+                // const dataTime = res.data.data
+                const obj = res.data.data.MVideos;
+                const arr = [];
+                this.mediaList = [];// 清空上次保留的数据
+                for (const key in obj) {
+                    // 每个视频增加是否勾选标记
+                    let videoList = obj[key];
+                    if(videoList && videoList.length>0){
+                        videoList.forEach((video) => {
+                            video.checked = false;
+                        })
+                    }
+
+                    arr.push({
+                        key: key,
+                        list: videoList
+                    })
+                    this.mediaList.push(...videoList)
+                }
+                this.fileList = arr;
+                this.num = arr.length;
+                this.IndustryId 
+                
+                if (this.mediaList == '{}') {
+                    this.mediaList = null;
+                    this.num = 0
+                    this.isEmpty = true;
+                }
+
+            })
+        },
         // 获取媒体文件夹
         getMediaFolder(){
             this.$http.get('/get_media_folder')
@@ -239,7 +262,9 @@ export default {
                     return;
                 }
                 if(res.data.data && res.data.data.length>0){
-                    this.fileList = res.data.data;
+                    this.$nextTick(() => {
+                        this.fileList = res.data.data;
+                    })
                     //console.log("getMediaFolder",this.fileList);
                 }
                 //console.log("getMediaFolder",res.data);
@@ -275,7 +300,7 @@ export default {
                 }
                 this.$message.success("添加成功");
                 this.addFolderVisible = false;
-                this.getMediaFolder();
+                this.getFoldersByMedia();
             })
             .catch(err => {
                 this.$message.error("网络或系统异常！")
@@ -284,11 +309,12 @@ export default {
         },
         fileDirClick(item) {
             //console.log(JSON.parse(JSON.stringify(item.list)));
+            console.log('fileDirClick',item.list)
             this.mediaList = [];
-            this.mediaList = JSON.parse(JSON.stringify(item.list))
-            // this.$nextTick(() => {
-            //     this.mediaList = JSON.parse(JSON.stringify(item.list))
-            // })
+            //this.mediaList = JSON.parse(JSON.stringify(item.list))
+            this.$nextTick(() => {
+                this.mediaList = JSON.parse(JSON.stringify(item.list))
+            })
             
         },
         upLoadRequest(option) {
@@ -379,29 +405,112 @@ export default {
             this.visibleFile = false
             this.dialogFormVisible = true;
         },
-        deleteMediaChange(id,item) {
-            this.deletelist = [...item];
-            this.IndustryId = id
-            console.log(this.IndustryId,this.deletelist);  
-            // console.log(this.deletelist);
-            deleteMedia(this.deletelist).then(res => {
-                if (res.data.code == 200)
+        // 删除单个媒体视频
+        deleteMediaChange(item) {
+            this.$messagebox.confirm(
+                '确定删除[' + item.FileName + ']吗？',
+                '删除确定',
+                {
+                    confirmButtonText: '删除',
+                    cancelButtonText: '取消',
+                    type: 'Warning'
+                }
+            ).then(() =>{
+                console.log('deleteMediaChange',item)
+                let MediaID = [];
+                MediaID.push(item.Id)
+                deleteMedia(MediaID,item.MediaPath).then(res => {
+                    if(res.data.code != 200){
+                        console.log(res.data);
+                        this.$message.error(res.data.msg);
+                        return;
+                    }
                     this.$message({
                         message: '删除成功',
                         type: 'success'
                     });
-                getMediaList().then(res => {
-                    this.mediaList = res.data.data;
-                    if (this.mediaList == '{}') {
-                        this.mediaList = null;
-                    }
-
+                    // 获取媒体文件
+                    this.getFoldersByMedia();
                 })
-
+            }).catch(() => {
+                this.$message.info('取消删除')
             })
         },
-        checkChange(){
+        // 选择改变事件
+        checkChange(isSelect,video,index){
             this.isCheck = true
+            console.log('checkChange',isSelect,video,index)
+            // 如果勾选
+            if(isSelect){
+                this.selectedList.push(video);
+                if(this.mediaList.length === this.selectedList.length){
+                    this.isSelectAll = true
+                }
+                if(this.mediaList.length !== this.selectedList.length){
+                    this.isSelectAll = false;
+                }
+            }
+            // 如果不勾选
+            if(!isSelect){
+                this.selectedList = this.selectedList.filter((item) => {
+                    return item.Id != video.Id
+                })
+                if(this.mediaList.length === this.selectedList.length){
+                    this.isSelectAll = true
+                }
+                if(this.mediaList.length !== this.selectedList.length){
+                    this.isSelectAll = false;
+                }
+            }
+        },
+        // 全选事件
+        selectAllHandle(isSelect){
+            if(isSelect){
+                this.mediaList.forEach((item) => {
+                    item.checked = true;
+                })
+                this.selectedList = this.mediaList;
+            }
+            if(!isSelect){
+                this.mediaList.forEach((item) => {
+                    item.checked = false;
+                })
+                this.selectedList = [];
+            }
+        },
+        // 删除文件夹
+        delFolder(folder){
+            console.log('delFolder',folder)
+            this.$messagebox.confirm(
+                '确定删除[' + folder.key + ']吗？',
+                '删除确定',
+                {
+                    confirmButtonText: '删除',
+                    cancelButtonText: '取消',
+                    type: 'Warning'
+                }
+            ).then(() =>{
+                // 删除逻辑
+                deleteMediaFolder(folder.key, this.videoType).then(res => {
+                    if(res.data.code != 200){
+                        console.log(res.data);
+                        this.$message.error(res.data.msg);
+                        return;
+                    }
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    });
+                    // 获取媒体文件
+                    this.getFoldersByMedia();
+                }).catch(err => {
+                    this.$message.error("网络或系统异常！")
+                    console.log(err);
+                })
+            }).catch(() => {
+                // 取消逻辑
+                this.$message.info('取消删除')
+            })
         }
     },
 }
@@ -583,23 +692,50 @@ export default {
     .industry-wrap {
         display: flex;
         margin-bottom: 18px;
+        flex-wrap: wrap;
 
         >li {
             width: 80px;
             margin: 0 22px;
             cursor: pointer;
+            position: relative;
+
+            >img{
+                width: 78px;
+                height: 60px;
+            }
 
             >div {
                 font-family: PingFangSCMedium-Medium;
                 font-size: 12px;
                 font-weight: normal;
                 text-align: center;
-                margin-top: 10px;
+                //margin-top: 10px;
                 color: #999;
             }
-
         }
+    }
+    .industry-wrap>li:hover .folder-mask{
+        display: block;
+    }
+    .folder-mask{
+        width: 78px;
+        height: 60px;
+        //margin: 0 22px;
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
 
+        .del-icon{
+            width: 25%;
+            height: 25%;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FFF;
+        }
     }
 
     .get-content {
@@ -651,7 +787,15 @@ export default {
         height: 100%;
         border-radius: 10px;
         display: none;
+        box-sizing: border-box;
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
+
+        &.selected{
+            display: block;
+        }
+        &.unselected{
+            display: none;
+        }
 
         .edit-wrap {
 

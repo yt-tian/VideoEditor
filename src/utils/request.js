@@ -1,5 +1,6 @@
 
 import axios from 'axios'
+import router from '@/router'
 
 import { ElMessage  } from 'element-plus';
 const service = axios.create({
@@ -24,9 +25,16 @@ service.interceptors.request.use(config => {
 
 // 3.响应拦截器
 service.interceptors.response.use(response => {
-  return response
+  if(response.data.code === -403){
+    //ElMessage.error('未授权，请重新登录')
+    router.push('/auth/login')
+  }else{
+    return response
+  }
+  
 }, error => {
   if (error && error.response) {
+    console.log('error',error)
     switch (error.response.status) {
       case 400:
         error.message = '错误请求'
@@ -69,12 +77,12 @@ service.interceptors.response.use(response => {
     }
   } else {
     if (JSON.stringify(error).includes('timeout')) {
-      ElMessage .error('服务器响应超时，请刷新当前页')
+      ElMessage.error('服务器响应超时，请刷新当前页')
     }
     error.message = '连接服务器失败'
   }
 
-  ElMessage .error(error.message) 
+  ElMessage.error(error.message) 
   return Promise.resolve(error.response)
 })
 //4.导出axios实例
