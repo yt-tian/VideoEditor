@@ -37,12 +37,26 @@ export default defineConfig({
       'Access-Control-Allow-Origin': 'http://119.23.230.233/,http://8.210.20.223/'
     },
     proxy: {
+      // 线上环境
       '/api': {
         // target: 'http://127.0.0.1:3000',
         target: 'http://119.23.230.233/',
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/video': {
+        // target: 'http://127.0.0.1:3000',
+        target: 'http://119.23.230.233/',
+        changeOrigin: true,
+        // rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      //本地调试
+      // '/api': {
+      //   // target: 'http://127.0.0.1:3000',
+      //   target: 'http://172.18.3.60/',
+      //   changeOrigin: true,
+      //   // rewrite: (path) => path.replace(/^\/api/, ''),
+      // },
       '/reptile_video': {
         target: 'http://119.23.230.233/',
         changeOrigin: true,

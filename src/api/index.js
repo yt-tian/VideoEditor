@@ -92,12 +92,11 @@ export const getMediaList = ()=> request({
 })
 
 // 删除素材库内容接口
-export const deleteMedia = (MediaID,MediaPath)=> request({
+export const deleteMedia = (MediaID)=> request({
   method: 'post',
   url: '/delete_media',
   data:{
-    MediaID,
-    MediaPath
+    MediaID
   }
 
 })
@@ -112,3 +111,21 @@ export const deleteMediaFolder = (MediaPath,MediaType)=> request({
   }
 
 })
+
+// 下载
+export const downloadMedia = (url)=>{
+  console.log('url',url)
+  //let mediaUrl = window.URL.createObjectURL(url)
+  let mediaUrl = url + '?response-content-type=application/octet-stream'
+  let link = document.createElement('a');
+  link.style.display = 'none';
+  link.href = mediaUrl;
+  //link.href = window.URL.createObjectURL(url);
+  //let timestamp = new Date().getTime()
+  link.setAttribute("download","aaa.mp4")
+  link.target = "_blank"
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link);
+  //link.remove()
+}

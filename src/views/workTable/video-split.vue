@@ -88,6 +88,7 @@
                                     
                                 </div>
                             </el-space>
+                            <div class="viewMore" v-if="pageParms.pageDate.length>1" @click="viewMore">查看更多</div>
                         </div>
                         <div class="operate-block">
                             <el-checkbox label="全选" v-model="isSelectAll" :checked="isSelectAll" @change="selectAllHandle($event)"/>
@@ -110,7 +111,7 @@
                 </el-footer>
             </el-container>
             <!-- 上传视频弹框 -->
-            <el-dialog title="上传视频" v-model="uploadVisible" :destroy-on-close="true" width="30%" top="20%">
+            <el-dialog title="上传视频" v-model="uploadVisible" :destroy-on-close="true" :close-on-click-modal="false" width="30%" top="20%">
                 <ul>
                     <li class="dialog-li" v-for="(item,index) in uploadFileListCopy" :key="index">
                         <div>
@@ -126,7 +127,7 @@
                 </div>
             </el-dialog>
             <!-- 从素材库获取视频 -->
-            <el-dialog title="添加视频" v-model="addMaterialVisible" :destroy-on-close="true" width="80%" heigth="100%" custom-class="add-material-dialog">
+            <el-dialog title="添加视频" v-model="addMaterialVisible" :destroy-on-close="true" :close-on-click-modal="false" width="80%" heigth="100%" custom-class="add-material-dialog">
                 <div style="height: 60vh;">
                     <el-scrollbar>
                         <add-material-video v-bind:selectedList="selectedList" @changeVal="changeVal"></add-material-video>
@@ -274,7 +275,7 @@ export default{
         beforeUpload(file){
 
             //console.log('文件名',file.name)
-            let reg = new RegExp("[/\\\\*:?\"<>|() ]")
+            let reg = new RegExp("[/\\\\*:：?？\"“”<《>》|()（） ]")
             if(reg.test(file.name)){
                 this.$message.warning('文件名不能包含 /\\*:?"<>|() 空格等特殊字符，请修改后重新上传');
                 return false;
@@ -675,6 +676,18 @@ export default{
                     type: 'success'
                 });
             }).catch()
+        },
+        // 查看更多
+        viewMore(){
+            let data = this.fileListCopy;
+            //let data1 = this.videoSplitObjs;
+            let page = this.$router.resolve({
+                name: 'splitViewMore',
+                params: {
+                    data1: JSON.stringify(data)
+                }
+            })
+            window.open(page.href,'_blank');
         }
     }
 }
@@ -823,6 +836,7 @@ export default{
             }
             .select-block{
                 display: flex;
+                flex-wrap: wrap;
 
                 .select-div{
                     width: 150px;
@@ -882,6 +896,14 @@ export default{
 
                     }
 
+                }
+
+                .viewMore{
+                    margin-left: auto;
+                    margin-right: 15px;
+                    margin-top: 15px;
+                    color: #2254F4;
+                    cursor: pointer;
                 }
             
             }

@@ -41,8 +41,11 @@
         <div class="all-industry">
             <ul class="industry-wrap">
                 <li v-for="(item, index) in fileList " :key="index" @click="fileDirClick(item)">
-                    <img src="@/assets/images/file-img.png" alt="">
-                    <div class="folder-mask">
+                    <img src="@/assets/images/file-img.png" alt="" :class="{selected:item.key===folderNameSelect?true:false}">
+                    <div class="folder-mask" :class="{selected:item.key===folderNameSelect?true:false}">
+                        <el-checkbox v-if="item.key===folderNameSelect?true:false" 
+                                    :v-model="item.key===folderNameSelect?true:false" 
+                                    :checked="item.key===folderNameSelect?true:false" label="" size="large" class="folder-checkbox" />
                         <div class="del-icon" @click="delFolder(item)"><el-icon><DeleteFilled /></el-icon></div>
                     </div>
                     <div>{{ item.key }}</div>
@@ -56,16 +59,17 @@
 
             <div style="height:100%">
                 <ul class="get-content">
-                    <li v-for="(item, index) in mediaList " :key="index">
-                        <video class="video" controls muted :src="`${appBaseUrl}${item.Path}`">
+                    <li v-for="(item, index) in mediaList " :key="index" >
+                        <video class="video" controls muted :src="`${appBaseUrl}${item.Path}`" @play="videoPlay">
                             <!-- <source :src="`${appBaseUrl}${item.Path}`" /> -->
                         </video>
-                        <div>{{ item.FileName }}</div>
-                        <div class="mask-item" :class="{selected:item.checked,unselected:!item.checked}">
-                            <div>
-                                <el-checkbox v-model="item.checked" :checked="item.checked" label="" size="large" class="checkbox" @change="checkChange($event,item,index)" />
-                                <!-- <span class="mixed-shear">混剪</span> -->
-                            </div>
+                        <!-- <div class=""> -->
+                        <el-checkbox v-model="item.checked" :checked="item.checked" label="" size="large" class="checkbox" @change="checkChange($event,item,index)" />
+                            <!-- <span class="mixed-shear">混剪</span> -->
+                        <!-- </div> -->
+                        <div class="videoName">{{ item.FileName }}</div>
+                        <div class="mask-item" :class="{selected:item.checked,unselected:!item.checked}" @click="playPreview(item)">
+                            
                             <div class="edit-wrap">
                                 <button class="edit">编辑</button>
                                 <div class="more-edit"><span class="more"></span>
@@ -75,7 +79,7 @@
                                         <li>复制到...</li>
                                         <li>移动到...</li>
                                         <li>下载</li>
-                                        <li @click="() => deleteMediaChange(item)">移入回收站</li>
+                                        <li @click="() => deleteMediaChange(item)">删除</li>
                                     </ul>
                                 </div>
                             </div>
@@ -101,33 +105,71 @@
                 <button class="button">创建副本</button>
                 <button class="button">移动到...</button>
                 <button class="button">复制到...</button>
-                <button class="button">下载</button>
-                <button class="button">移入回收站</button>
+                <button class="button" @click="downSelected">下载</button>
+                <button class="button" @click="deleteSelectedMedia">删除</button>
             </div>
-            <div class="check-right">
+            <div class="check-right" @click="closeCheckRight">
                 <el-icon><CloseBold /></el-icon>
             </div>
         </div>
-        <el-dialog v-model="dialogVisible" title="导入素材" width="30%" :before-close="handleCloseFile">
+        <el-dialog v-model="dialogVisible" :close-on-click-modal="false" title="导入素材" width="30%" :before-close="handleCloseFile">
             <!-- action="/api/v1/import_media_byfile" -->
             <!-- :on-change="fileListHander" -->
-            <el-upload 
-                class="upload-demo" 
-                drag 
-                :headers="uploadHeaders"
-                :http-request="upLoadRequest"
-                :on-change="fileListHander"
-                multiple>
-                <el-icon class="el-icon--upload uploadMp4"></el-icon>
-                <div class="el-upload__text">
-                    拖拽文件到此处，或者 <br /><em style="color:#2254F4;">选择文件...</em>
+            <div v-if="importPart1Flag">
+                <el-form :model="form">
+                    <el-form-item label="*导入位置" ></el-form-item>
+                    <el-select v-model="importFolderName" placeholder="全部来源">
+                        <el-option :label="item.key" v-for="(item, index) in fileList" :value="item.key" :key="index"></el-option>
+                    </el-select>
+                </el-form>
+                <div vlot:="footer" class="dialog-footer">
+                    <el-button @click="importMaterialCancel()">取 消</el-button>
+                    <el-button type="primary" @click="importMaterialSubmit">确 认</el-button>
                 </div>
-                <template #tip>
-                    <div class="el-upload__tip">
-                        支持同时上传MP4、MOV、MP3、PMG、JPG、GIF格式的素材，视频时长不得超过60分钟
+            </div>
+            <!-- :http-request="upLoadRequest" -->
+            <div v-else-if="importPart2Flag">
+                <el-upload
+                    class="upload-demo" 
+                    drag 
+                    v-model:file-list="importFileList"
+                    accept=".mp4"
+                    :auto-upload="false"
+                    :show-file-list="false"
+                    :headers="uploadHeaders"
+                    :on-change="fileListHander"
+                    :before-upload="beforeUpload"
+                    multiple>
+                    <el-icon class="el-icon--upload uploadMp4"></el-icon>
+                    <div class="el-upload__text">
+                        拖拽文件到此处，或者 <br /><em style="color:#2254F4;">选择文件...</em>
                     </div>
-                </template>
-            </el-upload>
+                    <template #tip>
+                        <div class="el-upload__tip">
+                            支持同时上传MP4、MOV、MP3、PMG、JPG、GIF格式的素材，视频时长不得超过60分钟
+                        </div>
+                    </template>
+                </el-upload>
+            </div>
+            <div v-else-if="importPart3Flag">
+                <div class="file-list-div">
+                    <div class="file-item" v-for="(item,index) in importFileList" :key="index">
+                        <div class="item-img">
+                            <img src="@/assets/images/mp4.png"/>
+                        </div>
+                        <div>{{ item.name }}</div>
+                        <div class="item-del" @click="removeFile(item)"><el-icon><DeleteFilled /></el-icon></div>
+                    </div>
+                    <div class="file-foot">
+                        <div>
+                            <el-button type="" @click="addFile"><el-icon><Plus /></el-icon>添加文件</el-button>
+                        </div>
+                        <div class="foot-sumit">
+                            <el-button type="" @click="uploadSumit">确定</el-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </el-dialog>
         <el-dialog v-model="visibleFile" title="导入素材" width="30%" :before-close="visibleFileClose">
             <ul>
@@ -137,7 +179,7 @@
                 <li>xxxxx.mp4</li>
             </ul>
             <template #footer>
-                <el-button @click="() => addFile()" class="addFile">+添加文件</el-button>
+                <el-button @click="() => addFile1()" class="addFile">+添加文件</el-button>
                 <el-button type="primary" @click="() => importFileHander()" class="add-primary">
                     确定
                 </el-button>
@@ -155,11 +197,20 @@
                 <el-button type="primary" @click="addFolderSubmit">确 认</el-button>
             </div>
         </el-dialog>
+        <!-- 视频预览播放器 -->
+        <el-dialog v-model="previewVideoVisible" :fullscreen="true" :destroy-on-close="true" :close-on-click-modal="false" width="50%" heigth="100%">
+            <div style="height: 90vh;">
+                <el-scrollbar>
+                    <video id="previewVideo" :src="previewSrc" class="previewVideo" controls muted></video>
+                </el-scrollbar>
+            </div>
+        </el-dialog>
     </div>
 </template>
 <script>
 import DialogView from '../../components/Dialog.vue'
-import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder } from '../../api/index'
+//import {saveAs} from 'file-saver'
+import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder,downloadMedia } from '../../api/index'
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
 import axios from 'axios'
 export default {
@@ -171,11 +222,15 @@ export default {
             appBaseUrl,
             number: 0,
             checked1: false,
+            folderIsSelect: true,
+            folderNameSelect: '',
             isSelectAll: false,
             value1: true,
             dialogVisible: false,
             addFolderVisible: false,
-            folderName: '',
+            folderName: '',// 添加文件夹的名称
+            form: '',
+            importFolderName: '',// 上传文件选择的文件夹名称
             visibleFile: false,
             dialogFormVisible: false,
             MediaType: 'MediaType',
@@ -198,7 +253,13 @@ export default {
             num:0,
             fileList: [],
             IndustryId:null,
-            selectedList: [] // 选中列表
+            selectedList: [], // 选中列表
+            importPart1Flag: true,
+            importPart2Flag: false,
+            importPart3Flag: false,
+            importFileList: [], // 导入素材文件列表
+            previewVideoVisible: false,
+            previewSrc: 'http://119.23.230.233/video/646742be0806630be781ff1a/视频拆分上传的文件/f79c212d722816f503eba2cc6f3a8686aaa.mp4'
         }
     },
     computed: {
@@ -308,38 +369,58 @@ export default {
             })
         },
         fileDirClick(item) {
+            this.$nextTick(() => {
+                this.folderNameSelect = item.key;
+            })
+            this.isCheck = false;
+            this.isSelectAll = false;
+            this.selectedList = [];
+
+            // 切换文件夹时，把视频选中状态改成false
+            let videoList = item.list;
+            if(videoList && videoList.length>0){
+                videoList.forEach((video) => {
+                    video.checked = false;
+                })
+            }
+
             //console.log(JSON.parse(JSON.stringify(item.list)));
-            console.log('fileDirClick',item.list)
+            //console.log('fileDirClick',item.list)
             this.mediaList = [];
             //this.mediaList = JSON.parse(JSON.stringify(item.list))
             this.$nextTick(() => {
                 this.mediaList = JSON.parse(JSON.stringify(item.list))
+                //console.log('fileDirClick1',this.mediaList)
             })
             
         },
         upLoadRequest(option) {
-            const formData = new FormData()
-            console.log(option.filename);
-            formData.append(`file`, option.file)
-            console.log(formData)
+            let formData = new FormData();
+            formData.append(`file`, option.file);
             axios({
-                url: this.uploadUrl,
+                url: '/api/v1/import_media_byfile?MediaType=video&MediaPath=' + this.importFolderName,
                 method: 'put',
                 data: formData,
-                headers: this.uploadHeaders
+                headers: {token: sessionStorage.getItem('Authorization'),"Content-Type": "multipart/form-data"}
             }).then(res => {
-                console.log(res);
-                getMediaList().then(res => {
-            // console.log("获取素材库视频", res.data.data);
-            // const dataTime = res.data.data
-            this.mediaList = res.data.data;
-            if (this.mediaList == '{}') {
-                this.mediaList = null;
-                this.isEmpty = true;
-            }
+                if(res.data.code != 200){
+                    console.log(res.data);
+                    this.$message.error(res.data.msg);
+                    return;
+                }
+                this.$message.success("上传成功");
+                this.$nextTick(() => {
+                    this.importFileList.forEach((item) => {
+                        if(item.uid === option.file.uid){
+                            item.percentage = 100;
+                            item.Path = res.data.data.FilePath;
+                            item.MediaPath = res.data.data.MediaPath;
+                        }
+                    });
+                })
 
-        })
             }).catch(err => {
+                this.$message.error("网络或系统异常！")
                 console.log(err);
             })
         },
@@ -347,12 +428,19 @@ export default {
             this.dialogVisible = true;
         },
         handleCloseFile() {
+
+            this.importFolderName = '';
+            this.importFileList = [];
+            this.importPart1Flag = true;
+            this.importPart2Flag = false;
+            this.importPart3Flag = false;
+
             this.dialogVisible = !this.dialogVisible
         },
         visibleFileClose() {
             this.visibleFile = !this.visibleFile
         },
-        addFile() {
+        addFile1() {
             this.visibleFile = !this.visibleFile
             this.dialogVisible = !this.dialogVisible
         },
@@ -384,27 +472,6 @@ export default {
         handleClose() {
             this.dialogFormVisible = false
         },
-        fileListHander() {
-            // this.visibleFile = true
-            this.dialogVisible = false;
-            this.$nextTick(()=>{
-                 getMediaList().then(res => {
-            // console.log("获取素材库视频", res.data.data);
-            // const dataTime = res.data.data
-            this.mediaList = res.data.data.MVideos;
-            if (this.mediaList == '{}') {
-                this.mediaList = null;
-                this.isEmpty = true;
-            }
-
-        })
-            })
-           
-        },
-        importFileHander() {
-            this.visibleFile = false
-            this.dialogFormVisible = true;
-        },
         // 删除单个媒体视频
         deleteMediaChange(item) {
             this.$messagebox.confirm(
@@ -419,7 +486,7 @@ export default {
                 console.log('deleteMediaChange',item)
                 let MediaID = [];
                 MediaID.push(item.Id)
-                deleteMedia(MediaID,item.MediaPath).then(res => {
+                deleteMedia(MediaID).then(res => {
                     if(res.data.code != 200){
                         console.log(res.data);
                         this.$message.error(res.data.msg);
@@ -435,6 +502,52 @@ export default {
             }).catch(() => {
                 this.$message.info('取消删除')
             })
+        },
+        // 删除选中的媒体视频
+        deleteSelectedMedia(){
+            if(this.selectedList.length <= 0){
+                this.$message.warning('至少选中一个文件');
+            }
+            this.$messagebox.confirm(
+                '确定删除选中的文件吗？',
+                '删除确定',
+                {
+                    confirmButtonText: '删除',
+                    cancelButtonText: '取消',
+                    type: 'Warning'
+                }
+            ).then(() =>{
+                let MediaID = [];
+                this.selectedList.forEach((video) => {
+                    MediaID.push(video.Id)
+                })
+                deleteMedia(MediaID).then(res => {
+                    if(res.data.code != 200){
+                        console.log(res.data);
+                        this.$message.error(res.data.msg);
+                        return;
+                    }
+                    this.$message({
+                        message: '删除成功',
+                        type: 'success'
+                    });
+                    // 清除选文件夹的选中状态
+                    this.folderNameSelect = '';
+                    // 获取媒体文件
+                    this.getFoldersByMedia();
+                })
+            }).catch(() => {
+                this.$message.info('取消删除')
+            })
+        },
+        // 下载选中
+        downSelected(){
+            if(this.selectedList.length <= 0){
+                this.$message.warning('至少选中一个文件');
+            }
+            let url = appBaseUrl + this.selectedList[0].Path;
+            downloadMedia(url);
+            //saveAs(url,'aaa.mp4')
         },
         // 选择改变事件
         checkChange(isSelect,video,index){
@@ -462,6 +575,9 @@ export default {
                     this.isSelectAll = false;
                 }
             }
+            if(this.selectedList.length === 0){
+                this.isCheck = false;
+            }
         },
         // 全选事件
         selectAllHandle(isSelect){
@@ -477,6 +593,10 @@ export default {
                 })
                 this.selectedList = [];
             }
+        },
+        // 关闭全选操作栏
+        closeCheckRight(){
+            this.isCheck = false;
         },
         // 删除文件夹
         delFolder(folder){
@@ -511,6 +631,114 @@ export default {
                 // 取消逻辑
                 this.$message.info('取消删除')
             })
+        },
+        // 导入素材取消事件
+        importMaterialCancel(){
+            this.dialogVisible = false;
+        },
+        // 导入素材确定事件
+        importMaterialSubmit(){
+            if(!this.importFolderName){
+                this.$message.warning('请选择导入存放的文件夹');
+                return;
+            }
+            this.$nextTick(() => {
+                
+                this.importPart1Flag = false;
+                this.importPart2Flag = true;
+            })
+        },
+        // 预览视频
+        playPreview(video){
+            this.previewSrc = appBaseUrl + video.Path;
+            this.previewVideoVisible = true;
+            this.$nextTick(() => {
+                let player = document.getElementById("previewVideo");
+                console.log('player',player)
+                if(!player.iffullscreen){
+                    player.iffullscreen = true;
+                }
+                player.play();
+            })
+        },
+        videoPlay(){
+            console.log('videoPlay');
+        },
+        fileListHander(file) {
+            // this.visibleFile = true
+            this.importFileList.push(file);
+            console.log('importFileList',this.importFileList);
+            this.$nextTick(()=>{
+                this.importPart2Flag = false;
+                this.importPart3Flag = true;
+            })
+           
+        },
+        importFileHander() {
+            this.visibleFile = false
+            this.dialogFormVisible = true;
+        },
+        // 上传前处理
+        beforeUpload(file){
+            console.log('beforeUpload',file);
+            let reg = new RegExp("[/\\\\*:：?？\"“”<《>》|()（） ]")
+            if(reg.test(file.name)){
+                this.$message.warning('文件名不能包含 /\\*:?"<>|() 空格等特殊字符，请修改后重新上传');
+                return false;
+            }
+            
+        },
+        // 移除文件
+        removeFile(video){
+            this.importFileList = this.importFileList.filter((item) => {
+                return item.uid != video.uid
+            })
+        },
+        addFile(){
+            this.$nextTick(() => {
+                this.importPart3Flag = false;
+                this.importPart2Flag = true;
+            })
+            
+        },
+        // 上传
+        uploadSumit(){
+            if(!this.importFileList && this.importFileList.length<=0){
+                this.$message.warning('上传的文件列表不能为空');
+                return;
+            }
+            this.importFileList.forEach((video) => {
+                this.$message.info(video.name + "，开始上传");
+                let formData = new FormData();
+                formData.append(`file`, video.raw);
+                axios({
+                    url: '/api/v1/import_media_byfile?MediaType=video&MediaPath=' + this.importFolderName,
+                    method: 'put',
+                    data: formData,
+                    headers: {token: sessionStorage.getItem('Authorization'),"Content-Type": "multipart/form-data"}
+                })
+                .then(res => {
+                    if(res.data.code != 200){
+                        console.log(res.data);
+                        this.$message.error(res.data.msg);
+                        return;
+                    }
+                    this.$message.success(video.name + "，上传成功");
+                    this.getFoldersByMedia();
+                })
+                .catch(err => {
+                    this.$message.error("网络或系统异常！")
+                    console.log(err);
+                })
+            })
+
+            this.importFolderName = '';
+            this.importFileList = [];
+            this.importPart1Flag = true;
+            this.importPart2Flag = false;
+            this.importPart3Flag = false;
+
+            this.dialogVisible = false;
         }
     },
 }
@@ -658,6 +886,50 @@ export default {
             margin-right: 0;
         }
     }
+
+    .previewVideo{
+        width: 100%;
+        height: 90vh;
+    }
+
+    .file-list-div{
+        .file-item{
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            height: 60px;
+            background: #F6F7F9;
+            line-height: 60px;
+            margin-bottom: 2px;
+
+            .item-img{
+                margin-right: 9px;
+                display: flex;
+                
+                >img{
+                    // height: 100%;
+                    // width: 29px;
+                    // height: 35px;
+                    // justify-content: center;
+                    align-items: center;
+                }
+            }
+
+            .item-del{
+                margin-left: auto;//元素靠右
+            }
+        }
+
+        .file-foot{
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 50px;
+
+            .foot-sumit{
+                margin-left: auto;//元素靠右
+            }
+        }
+    }
 }
 
 .uploadMp4 {
@@ -703,6 +975,14 @@ export default {
             >img{
                 width: 78px;
                 height: 60px;
+                box-sizing: border-box;
+
+                &.selected{
+                    border: 1px solid #2254F4;
+                }
+                &.unselected{
+                    //display: none;
+                }
             }
 
             >div {
@@ -728,6 +1008,20 @@ export default {
         left: 0;
         background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
 
+        &.selected{
+            display: block;
+        }
+        &.unselected{
+            display: none;
+        }
+
+        .folder-checkbox{
+            width: 25%;
+            height: 25%;
+            position: absolute;
+            top: 10px;
+            left: 0px;
+        }
         .del-icon{
             width: 25%;
             height: 25%;
@@ -770,6 +1064,19 @@ export default {
                 font-size: 12px;
             }
 
+            .videoName{
+                width: 100%;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .checkbox{
+                position: absolute;
+                left: 22px;
+                top: 17px
+            }
+
         }
     }
 
@@ -799,7 +1106,7 @@ export default {
 
         .edit-wrap {
 
-            margin-top: 90%;
+            margin-top: 110%;
             padding: 0 10px;
         }
 
