@@ -30,15 +30,21 @@
                                             :before-upload="beforeUpload"
                                         >
                                             <el-button type=""><el-icon><UploadFilled /></el-icon>本地上传</el-button>
+                                            <!-- <template #tip>
+                                                <div class="el-upload__tip">
+                                                    {{ uploadTips }}
+                                                </div>
+                                            </template> -->
                                         </el-upload>
 
                                         <!-- <el-button type="" @click="uploadByLocal"><el-icon><UploadFilled /></el-icon>本地上传</el-button> -->
                                         <el-button type="" @click="openMaterial"><el-icon><UploadFilled /></el-icon>我的素材库</el-button>
                                     </div>
+                                    <div class="upload-tips"><span>{{ uploadTips }}</span></div>
                                     <div class="videos-block">
                                         
                                         <div class="cover" v-for="(item,index) in fileListCopy" :key="index" @click="viewSplitVideos(item)">
-                                            <video class="video" v-if="item.percentage === 100" :src="`${appBaseUrl}${item.Path}`">
+                                            <video class="video" v-if="item.percentage === 100" :src="`${viewUrl}${item.Path}`">
                                                 <!-- <source :src="`${appBaseUrl}${item.Path}`"/> -->
                                             </video>
                                             <img v-else src="@/assets/images/split-cover.png"/>
@@ -79,7 +85,7 @@
                                      v-for="(item,index) in pageParms.pageDate" :key="index" @click="playSplitVideos(item)">
                                 <!-- <div class="select-div"> -->
                                     <video class="video">
-                                        <source :src="`${appBaseUrl}${item.Path}`" />
+                                        <source :src="`${viewUrl}${item.Path}`" />
                                     </video>
                                     <!-- <img src="@/assets/images/select-icon.png"/> -->
                                     <div class="mask-item" :class="{selected:item.checked,unselected:!item.checked}">
@@ -191,6 +197,7 @@ export default{
     data(){
         return{
             appBaseUrl,
+            viewUrl: 'http://119.23.230.233:81/',
             pageParms:{
                 total:0,
                 pageSize: 10,
@@ -217,11 +224,13 @@ export default{
             addMaterialVisible: false,
             selectedList: [],
             splitFragments: [],
+            allSplitFragments:[],
             saveToMaterialVisible: false,
             folderName: '',
             folderList: [],
             form:'',
-            isChecked: false
+            isChecked: false,
+            uploadTips: '文件名不能包含 /\\*:?"<>|() 空格等特殊字符',
         }
     },
     watch:{
@@ -457,7 +466,7 @@ export default{
         // 播放拆分视频
         playSplitVideos(videoObj){
             this.videoVisible = false;
-            this.splitVideoSrc = this.appBaseUrl+videoObj.Path;
+            this.splitVideoSrc = this.viewUrl+videoObj.Path;
             this.$nextTick(()=>{
                 this.videoVisible = true;
             })
@@ -679,13 +688,12 @@ export default{
         },
         // 查看更多
         viewMore(){
-            let data = this.fileListCopy;
-            //let data1 = this.videoSplitObjs;
+            let data1 = this.videoSplitObjs;
+            let data2 = this.videoSplitObjs;
             let page = this.$router.resolve({
-                name: 'splitViewMore',
-                params: {
-                    data1: JSON.stringify(data)
-                }
+                path: '/splitViewMore',
+                query: {data1 : JSON.stringify(data1),data2: JSON.stringify(data2)}
+                
             })
             window.open(page.href,'_blank');
         }
@@ -718,6 +726,7 @@ export default{
         .container-main{
             padding-top: 5px;
             padding-bottom: 10px;
+            height: 80vh;
         }
         .main{
             height: 50%;
@@ -735,6 +744,26 @@ export default{
                     :deep(.el-upload){
                         margin-right: 11px;
                     }
+
+                    .upload-demo{
+                        width: 130px;
+                    }
+                    :deep(.el-upload__tip){
+                        width: 100px;
+                    }
+                }
+                .upload-tips{
+                    
+                    font-weight: normal;
+                    vertical-align: baseline;
+
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                    >span{
+                        background-color: #FFFF00;
+                        font-size: 14px;
+                    }
+                    
                 }
                 .videos-block{
                     margin-top: 24px;
@@ -795,17 +824,22 @@ export default{
 
             .middle-aside{
                 //height: 620px;
+                height: 80vh;
+                background-color: #FFF;
             }
 
             .middle-main{
                 padding: 0;
                 margin-left: 10px;
                 //height: 620px;
+                height: 80vh;
+                background-color: #FFF;
             }
             
             .preview-block{
                 display: flex;
                 justify-content: center;
+                align-items: center;
                 background-color: #FFFFFF;
                 .video {
                     width: 405px;

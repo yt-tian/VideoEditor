@@ -60,7 +60,7 @@
             <div style="height:100%">
                 <ul class="get-content">
                     <li v-for="(item, index) in mediaList " :key="index" >
-                        <video class="video" controls muted :src="`${appBaseUrl}${item.Path}`" @play="videoPlay">
+                        <video class="video" controls muted :src="`${viewUrl}${item.Path}`" @play="videoPlay">
                             <!-- <source :src="`${appBaseUrl}${item.Path}`" /> -->
                         </video>
                         <!-- <div class=""> -->
@@ -210,7 +210,7 @@
 <script>
 import DialogView from '../../components/Dialog.vue'
 //import {saveAs} from 'file-saver'
-import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder,downloadMedia } from '../../api/index'
+import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder } from '../../api/index'
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
 import axios from 'axios'
 export default {
@@ -219,6 +219,7 @@ export default {
     },
     data() {
         return {
+            viewUrl: 'http://119.23.230.233:81/',
             appBaseUrl,
             number: 0,
             checked1: false,
@@ -542,11 +543,58 @@ export default {
         },
         // 下载选中
         downSelected(){
+            //event.preventDefault();
             if(this.selectedList.length <= 0){
                 this.$message.warning('至少选中一个文件');
             }
-            let url = appBaseUrl + this.selectedList[0].Path;
-            downloadMedia(url);
+            this.selectedList.forEach((item) => {
+                let url = this.viewUrl + item.Path + '?download=1';
+                
+
+            const link = document.createElement('a');
+            link.href = url;
+            let name = item.FileName;
+            link.download = name;
+            link.click();
+            document.body.removeChild(link);
+            })
+
+            // let url = this.viewUrl + this.selectedList[0].Path + '?download=1';
+
+            // const link = document.createElement('a');
+            // link.href = url;
+            // let name = this.selectedList[0].FileName;
+            // link.download = name;
+            // link.click();
+            // document.body.removeChild(link);
+            
+
+            // fetch(url)
+            // .then(response => response.blob())
+            // .then(blob => {
+            // const url = URL.createObjectURL(blob);
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.download = 'video.mp4';
+            // link.click();
+            // URL.revokeObjectURL(url);
+            // })
+            // .catch(error => {
+            // console.error('Failed to download the file:', error);
+            // });
+
+            // let link = document.createElement('a');
+            // // link.style.display = 'none';
+            // link.href = url;
+            // // //link.href = window.URL.createObjectURL(url);
+            // // //let timestamp = new Date().getTime()
+            // link.setAttribute("download","aaa.mp4")
+            // // link.target = "_blank"
+            // document.body.appendChild(link)
+            // link.click()
+            // document.body.removeChild(link);
+
+            // downloadMedia(url);
             //saveAs(url,'aaa.mp4')
         },
         // 选择改变事件
@@ -650,7 +698,7 @@ export default {
         },
         // 预览视频
         playPreview(video){
-            this.previewSrc = appBaseUrl + video.Path;
+            this.previewSrc = this.viewUrl + video.Path;
             this.previewVideoVisible = true;
             this.$nextTick(() => {
                 let player = document.getElementById("previewVideo");

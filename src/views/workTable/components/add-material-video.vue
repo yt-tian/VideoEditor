@@ -27,7 +27,7 @@
                 <ul class="get-content">
                     <li v-for="(item, index) in mediaList " :key="index">
                         <video class="video" controls muted>
-                            <source :src="`${appBaseUrl}${item.Path}`" />
+                            <source :src="`${viewUrl}${item.Path}`" />
                         </video>
                         <div class="video-name">{{ item.FileName }}</div>
                         <div class="mask-item" :class="{selected:item.checked,unselected:!item.checked}">
@@ -76,6 +76,7 @@ export default {
     data() {
         return {
             appBaseUrl,
+            viewUrl: 'http://119.23.230.233:81/',
             MediaType: 'MediaType',
             file: '@/assets/video/video1.mp4',
             isEmpty: false,

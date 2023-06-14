@@ -1,4 +1,6 @@
 import request from '../utils/request'
+// import axios from 'axios';
+// import { saveAs } from 'file-saver';
 
 // 获取视频接口
 /*
@@ -114,18 +116,27 @@ export const deleteMediaFolder = (MediaPath,MediaType)=> request({
 
 // 下载
 export const downloadMedia = (url)=>{
-  console.log('url',url)
-  //let mediaUrl = window.URL.createObjectURL(url)
-  let mediaUrl = url + '?response-content-type=application/octet-stream'
+  // console.log('url',url)
+  // //let mediaUrl = window.URL.createObjectURL(url)
+  // let mediaUrl = url + '?response-content-type=application/octet-stream'
   let link = document.createElement('a');
-  link.style.display = 'none';
-  link.href = mediaUrl;
-  //link.href = window.URL.createObjectURL(url);
-  //let timestamp = new Date().getTime()
+  // link.style.display = 'none';
+  link.href = url;
+  // //link.href = window.URL.createObjectURL(url);
+  // //let timestamp = new Date().getTime()
   link.setAttribute("download","aaa.mp4")
-  link.target = "_blank"
+  // link.target = "_blank"
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link);
   //link.remove()
+
+  // axios.get(url, {
+  //   responseType: 'blob', // 设置响应类型为二进制数据
+  // }).then(response => {
+  //   const fileName = 'file.mp4'; // 要保存的文件名
+  //   saveAs(response.data, fileName); // 使用FileSaver.js保存文件
+  // }).catch(error => {
+  //   console.error('Error downloading file:', error);
+  // });
 }
