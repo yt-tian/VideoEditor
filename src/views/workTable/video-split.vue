@@ -164,8 +164,9 @@
 import AddMaterialVideo from './components/add-material-video.vue'
 import axios from 'axios'
 //import { onMounted,reactive,toRefs,ref,nextTick } from 'vue'
+// import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder, downloadMedia, uploadBySplit } from '../../api/index'
 import { nextTick,ref } from 'vue'
-//import { importMedia } from '@/api/index';
+import { uploadBySplit } from '@/api/index';
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
 export default{
     components: {
@@ -307,6 +308,57 @@ export default{
         },
         // 文件上传
         uploadFile(options){
+            let currentFile = null;
+            this.fileListCopy.forEach((item) => {
+                if(item.uid === options.file.uid){
+                    currentFile = item;
+                }
+            })
+            uploadBySplit(options.file, 'video', '视频拆分上传的文件');
+            // console.log('uploadFile',percent);
+
+            let percent = 0;
+            let videoInfo = {};
+            let timer = setInterval(() => {
+                if(percent !== 100){
+                axios({
+                    url:'/api/v1/upload/progress',
+                    method:'get',
+                    params:{'fileName':options.file.name},
+                    headers: {token: sessionStorage.getItem('Authorization')}
+                }).then((res) => {
+                    console.log('progress',res.data)
+                    if(res.data.code != 200){
+                    console.log('upload/progress',res.data)
+                    return;
+                    }
+                    
+                    percent = res.data.percent;
+                    this.$nextTick(() => {
+                        currentFile.percentage = percent;
+                    })
+                    if(percent === 100){
+                        videoInfo = res.data.data;
+
+                        currentFile.Path = videoInfo.Path;
+                        currentFile.MediaPath = videoInfo.MediaPath;
+                                
+                        this.uploadFileListCopy.forEach((item) => {
+                            if(item.uid === options.file.uid){
+                                item.percentage = percent;
+                                item.Path = videoInfo.Path;
+                                item.MediaPath = videoInfo.MediaPath;
+                            }
+                        })
+                    }
+                    
+                })
+                }
+            },2000)
+
+            if(percent === 100){
+                clearInterval(timer);
+            }
 
             // const config = {
             //     handleProgress:event => {
@@ -317,46 +369,49 @@ export default{
             //     },
             // }
 
-            console.log('文件上传',options)
-            let formData = new FormData();
-            // formData.append(`MediaType`, 'video');
-            // formData.append(`MediaPath`, '视频拆分上传的文件');
-            formData.append(`file`, options.file);
 
-            axios({
-                url: '/api/v1/import_media_byfile?MediaType=video&MediaPath=视频拆分上传的文件',
-                method: 'put',
-                data: formData,
-                headers: {token: sessionStorage.getItem('Authorization'),"Content-Type": "multipart/form-data"}
-            })
-            .then(res => {
-                if(res.data.code != 200){
-                    console.log(res.data);
-                    this.$message.error(res.data.msg);
-                    return;
-                }
-                this.$message.success("上传成功");
-                this.$nextTick(() => {
-                    this.fileListCopy.forEach((item) => {
-                        if(item.uid === options.file.uid){
-                            item.percentage = 100;
-                            item.Path = res.data.data.FilePath;
-                            item.MediaPath = res.data.data.MediaPath;
-                        }
-                    });
-                })
-                this.uploadFileListCopy.forEach((item) => {
-                    if(item.uid === options.file.uid){
-                        item.percentage = 100;
-                        item.Path = res.data.data.FilePath;
-                        item.MediaPath = res.data.data.MediaPath;
-                    }
-                })
-            })
-            .catch(err => {
-                this.$message.error("网络或系统异常！")
-                console.log(err);
-            })
+
+
+            // console.log('文件上传',options)
+            // let formData = new FormData();
+            // // formData.append(`MediaType`, 'video');
+            // // formData.append(`MediaPath`, '视频拆分上传的文件');
+            // formData.append(`file`, options.file);
+
+            // axios({
+            //     url: '/api/v1/import_media_byfile?MediaType=video&MediaPath=视频拆分上传的文件',
+            //     method: 'put',
+            //     data: formData,
+            //     headers: {token: sessionStorage.getItem('Authorization'),"Content-Type": "multipart/form-data"}
+            // })
+            // .then(res => {
+            //     if(res.data.code != 200){
+            //         console.log(res.data);
+            //         this.$message.error(res.data.msg);
+            //         return;
+            //     }
+            //     this.$message.success("上传成功");
+            //     this.$nextTick(() => {
+            //         this.fileListCopy.forEach((item) => {
+            //             if(item.uid === options.file.uid){
+            //                 item.percentage = 100;
+            //                 item.Path = res.data.data.FilePath;
+            //                 item.MediaPath = res.data.data.MediaPath;
+            //             }
+            //         });
+            //     })
+            //     this.uploadFileListCopy.forEach((item) => {
+            //         if(item.uid === options.file.uid){
+            //             item.percentage = 100;
+            //             item.Path = res.data.data.FilePath;
+            //             item.MediaPath = res.data.data.MediaPath;
+            //         }
+            //     })
+            // })
+            // .catch(err => {
+            //     this.$message.error("网络或系统异常！")
+            //     console.log(err);
+            // })
         },
         // 上传中
         

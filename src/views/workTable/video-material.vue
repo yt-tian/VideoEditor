@@ -210,7 +210,7 @@
 <script>
 import DialogView from '../../components/Dialog.vue'
 //import {saveAs} from 'file-saver'
-import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder } from '../../api/index'
+import { importMediaFile, getMediaList, deleteMedia,deleteMediaFolder, downloadMedia } from '../../api/index'
 const appBaseUrl = import.meta.env.VITE_APP_BASE_URL
 import axios from 'axios'
 export default {
@@ -542,60 +542,59 @@ export default {
             })
         },
         // 下载选中
-        downSelected(){
+        async downSelected(){
             //event.preventDefault();
             if(this.selectedList.length <= 0){
                 this.$message.warning('至少选中一个文件');
+                return;
             }
-            this.selectedList.forEach((item) => {
-                let url = this.viewUrl + item.Path + '?download=1';
-                
 
-            const link = document.createElement('a');
-            link.href = url;
-            let name = item.FileName;
-            link.download = name;
-            link.click();
-            document.body.removeChild(link);
-            })
-
-            // let url = this.viewUrl + this.selectedList[0].Path + '?download=1';
-
+            let count = 0; // 已下载的文件数
+            for(var i=0;i<this.selectedList.length;i++){
+                let file = this.selectedList[i];
+                console.log('downSelected',file)
+                let url = this.viewUrl + file.Path + '?download=1';
+                downloadMedia(url)
+                if(++count >= 10){
+                    // await this.pause(1000);
+                    count = 0;
+                }
+            }
+        },
+        downFile(item){
+            // let url = this.viewUrl + item.Path + '?download=1';
             // const link = document.createElement('a');
             // link.href = url;
-            // let name = this.selectedList[0].FileName;
+            // let name = item.FileName;
+            // // link.download = name;
+            // link.setAttribute('download',name)
+            // document.body.appendChild(link);
+            // link.click();
+            // document.body.removeChild(link);
+
+            let url = this.viewUrl + item.Path + '?download=1';
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.style.height = 0;
+            iframe.src = url;
+            iframe.setAttribute("name", item.FileName);
+            // let name = item.FileName;
             // link.download = name;
+            //link.setAttribute('download',name)
+            document.body.appendChild(iframe);
+            console.log('iframe',iframe)
+            // setTimeout(() => { 
+            //     iframe.remove() //无奈之举，iframe 没有onload事件，只能放在setTimeout里清除了，时间稍微大一点，免得文件太大还没有下载完
+            // }, 500000)
             // link.click();
             // document.body.removeChild(link);
-            
-
-            // fetch(url)
-            // .then(response => response.blob())
-            // .then(blob => {
-            // const url = URL.createObjectURL(blob);
-            // const link = document.createElement('a');
-            // link.href = url;
-            // link.download = 'video.mp4';
-            // link.click();
-            // URL.revokeObjectURL(url);
-            // })
-            // .catch(error => {
-            // console.error('Failed to download the file:', error);
-            // });
-
-            // let link = document.createElement('a');
-            // // link.style.display = 'none';
-            // link.href = url;
-            // // //link.href = window.URL.createObjectURL(url);
-            // // //let timestamp = new Date().getTime()
-            // link.setAttribute("download","aaa.mp4")
-            // // link.target = "_blank"
-            // document.body.appendChild(link)
-            // link.click()
-            // document.body.removeChild(link);
-
-            // downloadMedia(url);
-            //saveAs(url,'aaa.mp4')
+        },
+        pause(msec) { // 异步暂停函数
+            return new Promise(
+                (resolve) => {
+                    setTimeout(resolve, msec || 1000);
+                }
+            );
         },
         // 选择改变事件
         checkChange(isSelect,video,index){
